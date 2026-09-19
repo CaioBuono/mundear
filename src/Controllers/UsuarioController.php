@@ -2,6 +2,7 @@
 
 namespace Controllers;
 
+use Session\Session;
 use Views\ViewRenderer;
 use Models\Usuario;
 
@@ -25,6 +26,8 @@ class UsuarioController
             return ViewRenderer::getLayout(['errorAuth' => $erroAuth], $paths, 'login.php');
         }
 
+        session_regenerate_id(true);
+        Session::setUsuario($obUsuario);
     }
 
     public static function getLogin(array $variaveisLayout = ['errorAuth' => '']): string
