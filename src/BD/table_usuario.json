@@ -1,0 +1,16 @@
+[
+  {
+    "idUsuario": 1,
+    "nome": "Yasmin Vida",
+    "email": "yasvida@gmail.com",
+    "senha": "$argon2id$v=19$m=65536,t=4,p=1$dFVPWS52ZDY2OXNSVzBsVA$orUBpQ17x5yxuWXUsvjLzjR0cqb6RjEE0xdXyOU3hGE",
+    "dataCadastro": "2026-09-18 00:00:01"
+  },
+  {
+    "idUsuario": 2,
+    "nome": "Caio Buono",
+    "email": "caiobuono@gmail.com",
+    "senha": "",
+    "dataCadastro": "2026-09-18 00:00:02"
+  }
+]
