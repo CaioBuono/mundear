@@ -13,3 +13,11 @@ if($_SERVER['REQUEST_METHOD'] == 'GET'){
             break;
     }
 }
+
+if($_SERVER['REQUEST_METHOD'] == 'POST'){
+    switch($path){
+        case '/login':
+            echo UsuarioController::login();
+            break;
+    }
+}
