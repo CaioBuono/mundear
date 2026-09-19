@@ -14,6 +14,11 @@ class ViewRenderer
         );
     }
 
+    public static function getComponente(array $variaveisLayout, string $pathComponente, string $arquivo)
+    {
+        return self::replace($variaveisLayout, file_get_contents($pathComponente . $arquivo));
+    }
+
     private static function getEstrutura(string $path, string $conteudo)
     {
         return file_get_contents($path . 'header.php') .

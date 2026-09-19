@@ -101,6 +101,8 @@
                 Faça login para continuar planejando suas aventuras.
             </p>
 
+            {{errorAuth}}
+
             <form action="" class="mt-8 space-y-5" method="POST">
                 <div>
                     <label for="email" class="mb-2 block text-sm font-semibold text-blue-950">
@@ -143,7 +145,7 @@
                     </a>
                 </div>
 
-                <button type="submit" class="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-blue-950 font-semibold text-white transition hover:bg-blue900">
+                <button type="submit" class="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-blue-950 font-semibold text-white transition hover:bg-blue-900">
                     Entrar
                     <span></span>
                 </button>
