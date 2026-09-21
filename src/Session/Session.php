@@ -13,7 +13,15 @@ class Session
             'nome'      => $obUsuario->getNome(),
             'email'     => $obUsuario->getEmail()
         ];
+    }
 
+    public static function verifyUsuarioLogado(): bool
+    {
+        return (isset($_SESSION['usuario']));
+    }
 
+    public static function getDadosUsuarioLogado(): array
+    {
+        return $_SESSION['usuario'];
     }
 }
