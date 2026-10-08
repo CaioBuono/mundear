@@ -42,4 +42,25 @@ abstract class Controller
 
         return strtoupper($nomeSeparado[0][0] . $nomeSeparado[0][0]);
     }
+
+    protected static function validarCamposObrigatorios($camposRecebidos, $camposObrigatorios): array
+    {
+        $camposInvalidos = [];
+        foreach($camposObrigatorios as $campo){
+            if(!in_array($campo, array_keys($camposRecebidos)) or !strlen($camposRecebidos[$campo])){
+                $camposInvalidos[] = $campo;
+            }
+
+            if(str_contains($campo, 'email') and !self::regexEmailValido($camposRecebidos[$campo])){
+                $camposInvalidos[] = $campo;
+            }
+        }
+
+        return $camposInvalidos;
+    }
+
+    private static function regexEmailValido($email): bool
+    {
+        return preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email);
+    }
 }

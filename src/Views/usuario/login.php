@@ -101,9 +101,13 @@
                 Faça login para continuar planejando suas aventuras.
             </p>
 
-            {{errorAuth}}
+            {{feedback}}
 
             <form action="" class="mt-8 space-y-5" method="POST">
+                <div id="boxNomeUsuario">
+
+                </div>
+
                 <div>
                     <label for="email" class="mb-2 block text-sm font-semibold text-blue-950">
                         E-mail
@@ -134,6 +138,10 @@
                     >
                 </div>
 
+                <div id="boxConfirmarSenha">
+
+                </div>
+
                 <div class="flex items-center justify-between text-sm">
                     <label for="" class="flex items-center gap-2 text-slate-600">
                         <input type="checkbox" name="lembrar" class="h-4 w-4">
@@ -145,7 +153,7 @@
                     </a>
                 </div>
 
-                <button type="submit" class="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-blue-950 font-semibold text-white transition hover:bg-blue-900">
+                <button type="submit" id="btnAcessar" class="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-blue-950 font-semibold text-white transition hover:bg-blue-900">
                     Entrar
                     <span></span>
                 </button>
@@ -161,9 +169,10 @@
                 <div class="h-px flex-1 bg-slate-200"></div>
             </div>
 
-            <a href="#" class="flex h-13 w-full items-center justify-center rounded-xl border border-blue-800 font-semibold text-blue-800 transition hover:bg-blue-50">
+            <a href="#" class="flex h-13 w-full items-center justify-center rounded-xl border border-blue-800 font-semibold text-blue-800 transition hover:bg-blue-50" id="btnCadastroUsuario">
                 Cadastre-se
             </a>
         </div>
     </section>
+    <script src="/public/js/usuario/cadastro.js"></script>
 </main>

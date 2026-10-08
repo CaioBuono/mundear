@@ -20,6 +20,8 @@ if($_SERVER['REQUEST_METHOD'] == 'GET'){
         case '/logout':
             UsuarioController::logout();
             break;
+        default:
+            echo 'ERRO 404';
     }
 }
 
