@@ -32,11 +32,9 @@
         "idUsuario": 4,
         "nome": "Viajante Demonstração",
         "email": "viajante@mundear.com",
-        "senha": "$argon2id$v=19$m=65536,t=4,p=1$eS5PWDFlVkQzRW5WMkZYNw$avBlUvCxJpRKbt/6RaqNPanNGxdWd5Zgzj1wvdkzbh0",
+        "senha": "$2y$12$VGsUcLhE5krcpstY2OykQeLxc13U.PZ.O7AD87bQm5n3iYiV6lR2m",
         "dataCadastro": "2026-09-18 00:00:04",
         "perfil": "viajante",
-        "ativo": true,
-        "tokenRecuperacao": null,
-        "expiracaoToken": null
+        "ativo": true
     }
 ]
