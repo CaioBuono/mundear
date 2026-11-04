@@ -1,0 +1,96 @@
+[
+    {
+        "idRoteiro": 1,
+        "idUsuario": 4,
+        "titulo": "Férias em Salvador",
+        "dataInicio": "2026-11-15",
+        "dataFim": "2026-11-19",
+        "idDestinos": [
+            3
+        ],
+        "status": "finalizado",
+        "valorTotalEstimado": 3646.7,
+        "dataCriacao": "2026-11-03 22:14:04",
+        "dataAtualizacao": "2026-11-03 22:14:44",
+        "itens": [
+            {
+                "idItem": 1,
+                "tipoServico": "transporte",
+                "idServico": "V0cf2e6f1e",
+                "descricao": "Voo Aerovia Linhas Aéreas",
+                "detalhes": "São Paulo → Salvador · saída 07:55, chegada 15/11 11:36",
+                "dataAgendada": "2026-11-15",
+                "dataFim": null,
+                "horario": "07:55",
+                "quantidadePessoas": 3,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 668.9,
+                "subtotal": 2006.7
+            },
+            {
+                "idItem": 2,
+                "tipoServico": "hospedagem",
+                "idServico": 8,
+                "descricao": "Pousada Pelourinho Colonial",
+                "detalhes": "Pousada · Rua do Carmo, 12 - Pelourinho, Salvador",
+                "dataAgendada": "2026-11-15",
+                "dataFim": "2026-11-19",
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 4,
+                "valorUnitario": 260,
+                "subtotal": 1040
+            },
+            {
+                "idItem": 3,
+                "tipoServico": "guia",
+                "idServico": 5,
+                "descricao": "Guia Iara Conceição",
+                "detalhes": "Cultura afro-brasileira · Salvador · (71) 99666-5555",
+                "dataAgendada": "2026-11-16",
+                "dataFim": null,
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 320,
+                "subtotal": 320
+            },
+            {
+                "idItem": 4,
+                "tipoServico": "passeio",
+                "idServico": 9,
+                "descricao": "Passeio de escuna às ilhas",
+                "detalhes": "Terminal Náutico da Bahia · 8h",
+                "dataAgendada": "2026-11-17",
+                "dataFim": null,
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 140,
+                "subtotal": 280
+            },
+            {
+                "idItem": 5,
+                "tipoServico": "passeio",
+                "idServico": 7,
+                "descricao": "Elevador Lacerda e Pelourinho",
+                "detalhes": "Praça Tomé de Souza - Centro Histórico · 3h",
+                "dataAgendada": "2026-11-16",
+                "dataFim": null,
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 0,
+                "subtotal": 0
+            }
+        ],
+        "compartilhamento": {
+            "idCompartilhamento": 1,
+            "token": "46407e018fb1b0ba42b531dab1ab86b7",
+            "urlLink": "/compartilhado?token=46407e018fb1b0ba42b531dab1ab86b7",
+            "dataExpiracao": "2026-12-03 23:59:59",
+            "statusAtivo": true,
+            "dataCriacao": "2026-11-03 22:14:44"
+        }
+    }
+]

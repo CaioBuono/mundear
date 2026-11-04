@@ -2,47 +2,34 @@
 
 namespace Models;
 
+use BD\TabelaJson;
+use Exceptions\RegraNegocioException;
+use Services\EmailSimulado;
+
 class Usuario
 {
-    private $idUsuario = null;
+    const PERFIL_VIAJANTE      = 'viajante';
+    const PERFIL_ADMINISTRADOR = 'administrador';
 
-    private $nome = null;
+    const TAMANHO_MINIMO_SENHA = 6;
 
-    private $email = null;
+    protected $idUsuario = null;
 
-    private $senha = null;
+    protected $nome = null;
 
-    private $dataCadastro = null;
+    protected $email = null;
 
-    const PATH_TABELA_USUARIOS = __DIR__ . '/../BD/table_usuario.json';
+    protected $senha = null;
 
-    private function setIdUsuario($idUsuario)
+    protected $dataCadastro = null;
+
+    protected $perfil = self::PERFIL_VIAJANTE;
+
+    protected $ativo = true;
+
+    protected static function getTabela(): TabelaJson
     {
-        $this->idUsuario = $idUsuario;
-    }
-
-    private function setNome($nome)
-    {
-        $this->nome = $nome;
-    }
-
-    private function setEmail($email){
-        $this->email = $email;
-    }
-
-    private function setSenha($senha)
-    {
-        $this->senha = $senha;
-    }
-
-    private function setDataCadastro($dataCadastro)
-    {
-        $this->dataCadastro = $dataCadastro;
-    }
-
-    private function getSenha()
-    {
-        return $this->senha;
+        return new TabelaJson('usuario', 'idUsuario');
     }
 
     public function getIdUsuario()
@@ -65,58 +52,42 @@ class Usuario
         return $this->dataCadastro;
     }
 
+    public function getPerfil(): string
+    {
+        return $this->perfil;
+    }
+
+    public function isAtivo(): bool
+    {
+        return (bool) $this->ativo;
+    }
+
+    public function isAdministrador(): bool
+    {
+        return false;
+    }
+
+    private function getSenha()
+    {
+        return $this->senha;
+    }
+
+    // ------------------------------------------------------------------
+    // Cadastro e autenticação (RF01, RNF03)
+    // ------------------------------------------------------------------
+
     public function cadastrar(array $dadosUsuario): bool
     {
-        $usuariosCadastrados = self::getTabela();
+        $this->nome         = trim($dadosUsuario['nome']);
+        $this->email        = strtolower(trim($dadosUsuario['email']));
+        $this->senha        = self::gerarHash($dadosUsuario['senha']);
+        $this->dataCadastro = (new \DateTime())->format('Y-m-d H:i:s');
+        $this->perfil       = self::PERFIL_VIAJANTE;
+        $this->ativo        = true;
 
-        $obUsuario = self::createUsuario($dadosUsuario);
-        $obUsuario->definirIdUsuario($usuariosCadastrados);
-        return $obUsuario->insertUsuario($usuariosCadastrados);
-    }
+        $this->idUsuario = self::getTabela()->inserir($this->toArray());
 
-    private function insertUsuario(array $usuariosCadastrados): bool
-    {
-        $novoUsuario = [
-            'idUsuario'    => $this->getIdUsuario(),
-            'nome'         => $this->getNome(),
-            'email'        => $this->getEmail(),
-            'senha'        => password_hash($this->getSenha(), PASSWORD_ARGON2ID),
-            'dataCadastro' => $this->getDataCadastro(),
-        ];
-
-        $usuariosCadastrados[] = $novoUsuario;
-        return file_put_contents(self::PATH_TABELA_USUARIOS, json_encode($usuariosCadastrados));
-    }
-
-    private function definirIdUsuario(array $usuariosCadastrados): void
-    {
-        $idUltimoUsuario     = end($usuariosCadastrados)['idUsuario'];
-        $idNovoUsuario       = $idUltimoUsuario + 1;
-
-        $this->setIdUsuario($idNovoUsuario);
-    }
-
-
-    private static function createUsuario(array $dadosUsuario): Usuario
-    {
-        $obUsuario = new Usuario();
-        $obUsuario->setIdUsuario($dadosUsuario['idUsuario'] ?? null);
-        $obUsuario->setNome($dadosUsuario['nome']);
-        $obUsuario->setEmail($dadosUsuario['email']);
-        $obUsuario->setSenha($dadosUsuario['senha']);
-        $obUsuario->setDataCadastro($dadosUsuario['dataCadastro'] ?? (new \DateTime())->format('Y-m-d H:i:s'));
-
-        return $obUsuario;
-    }
-
-    private function validarSenha($senha): bool
-    {
-        return password_verify($senha, $this->getSenha());
-    }
-
-    private static function getTabela(): array
-    {
-        return json_decode(file_get_contents(self::PATH_TABELA_USUARIOS), true);
+        return $this->idUsuario > 0;
     }
 
     public static function autenticar(string $email, string $senha): bool|Usuario
@@ -132,34 +103,185 @@ class Usuario
         return $obUsuario;
     }
 
+    private function validarSenha($senha): bool
+    {
+        return strlen((string) $this->getSenha()) > 0 && password_verify($senha, $this->getSenha());
+    }
+
+    /**
+     * RNF03: senha sempre armazenada como hash (Argon2id quando disponível).
+     */
+    private static function gerarHash(string $senha): string
+    {
+        return password_hash($senha, defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT);
+    }
+
+    // ------------------------------------------------------------------
+    // Gerenciamento de perfil
+    // ------------------------------------------------------------------
+
+    public function atualizarDados(string $nome, string $email): void
+    {
+        $nome  = trim($nome);
+        $email = strtolower(trim($email));
+
+        $obExistente = self::getUsuario($email);
+        if($obExistente instanceof Usuario and $obExistente->getIdUsuario() !== $this->idUsuario){
+            throw new RegraNegocioException('Já existe outro usuário cadastrado com esse e-mail.');
+        }
+
+        $this->nome  = $nome;
+        $this->email = $email;
+
+        self::getTabela()->atualizar($this->idUsuario, ['nome' => $nome, 'email' => $email]);
+    }
+
+    public function alterarSenha(string $senhaAtual, string $novaSenha): void
+    {
+        if(!$this->validarSenha($senhaAtual)){
+            throw new RegraNegocioException('A senha atual informada está incorreta.');
+        }
+
+        $this->definirNovaSenha($novaSenha);
+    }
+
+    private function definirNovaSenha(string $novaSenha): void
+    {
+        $this->senha = self::gerarHash($novaSenha);
+
+        self::getTabela()->atualizar($this->idUsuario, [
+            'senha'            => $this->senha,
+            'tokenRecuperacao' => null,
+            'expiracaoToken'   => null
+        ]);
+    }
+
+    /**
+     * Inicia a recuperação de senha: gera um token temporário (1 hora) e
+     * "envia" o link por e-mail (simulado em src/BD/table_email.json).
+     */
+    public static function recuperarSenha(string $email): bool
+    {
+        $obUsuario = self::getUsuario($email);
+        if(!$obUsuario instanceof Usuario or !$obUsuario->isAtivo()){
+            return false;
+        }
+
+        $token = bin2hex(random_bytes(32));
+
+        self::getTabela()->atualizar($obUsuario->getIdUsuario(), [
+            'tokenRecuperacao' => hash('sha256', $token),
+            'expiracaoToken'   => (new \DateTime('+1 hour'))->format('Y-m-d H:i:s')
+        ]);
+
+        EmailSimulado::enviar(
+            $obUsuario->getEmail(),
+            'Mundear - Recuperação de senha',
+            'Olá, ' . $obUsuario->getNome() . '! Use o link abaixo para criar uma nova senha. Ele expira em 1 hora.',
+            '/redefinir-senha?token=' . $token
+        );
+
+        return true;
+    }
+
+    public static function getUsuarioPorTokenRecuperacao(string $token): ?Usuario
+    {
+        if($token === '') return null;
+
+        $hashToken = hash('sha256', $token);
+        $registro  = self::getTabela()->buscarPrimeiro(
+            fn($usuario) => !empty($usuario['tokenRecuperacao']) && hash_equals($usuario['tokenRecuperacao'], $hashToken)
+        );
+
+        if(!$registro or strtotime($registro['expiracaoToken'] ?? '') < time()){
+            return null;
+        }
+
+        return self::criarAPartirDoRegistro($registro);
+    }
+
+    public static function redefinirSenha(string $token, string $novaSenha): bool
+    {
+        $obUsuario = self::getUsuarioPorTokenRecuperacao($token);
+        if(!$obUsuario instanceof Usuario){
+            return false;
+        }
+
+        $obUsuario->definirNovaSenha($novaSenha);
+        return true;
+    }
+
+    // ------------------------------------------------------------------
+    // Ativação / inativação (RN08)
+    // ------------------------------------------------------------------
+
+    public function alterarStatus(bool $ativo): void
+    {
+        $this->ativo = $ativo;
+        self::getTabela()->atualizar($this->idUsuario, ['ativo' => $ativo]);
+    }
+
+    // ------------------------------------------------------------------
+    // Consultas
+    // ------------------------------------------------------------------
+
     public static function getUsuario(string $email): Usuario|null
     {
-        $usuariosCadastrados = self::getTabela();
-        return (self::validarUsuarioCadastrado($email, $usuariosCadastrados))
-            ? self::createUsuario(self::getDados($email, $usuariosCadastrados))
-            : null;
+        $email    = strtolower(trim($email));
+        $registro = self::getTabela()->buscarPrimeiro(fn($usuario) => strtolower($usuario['email']) === $email);
+
+        return $registro ? self::criarAPartirDoRegistro($registro) : null;
     }
 
-    protected static function validarUsuarioCadastrado(string $email, array $usuariosCadastrados): bool
+    public static function getUsuarioPorId(?int $idUsuario): ?Usuario
     {
-        return in_array(
-            $email,
-            array_column($usuariosCadastrados, 'email')
-        );
+        if(!$idUsuario) return null;
+
+        $registro = self::getTabela()->buscarPorId($idUsuario);
+        return $registro ? self::criarAPartirDoRegistro($registro) : null;
     }
 
-    protected static function getDados(string $email, array $usuariosCadastrados): array
+    /**
+     * @return Usuario[]
+     */
+    public static function listar(): array
     {
-        $chaveRegistro = array_find_key(
-            array_column($usuariosCadastrados, 'email'),
-            function ($e) use ($email) {
-                return $e == $email;
-            }
-        );
-
-        return $usuariosCadastrados[$chaveRegistro];
+        return array_map(fn($registro) => self::criarAPartirDoRegistro($registro), self::getTabela()->listar());
     }
 
+    /**
+     * Fábrica: devolve um Administrador quando o perfil do registro for
+     * administrativo (Administrador é uma especialização de Usuario).
+     */
+    protected static function criarAPartirDoRegistro(array $registro): Usuario
+    {
+        $obUsuario = ($registro['perfil'] ?? '') === self::PERFIL_ADMINISTRADOR ? new Administrador() : new Usuario();
+        $obUsuario->preencher($registro);
 
+        return $obUsuario;
+    }
 
+    protected function preencher(array $registro): void
+    {
+        $this->idUsuario    = (int) $registro['idUsuario'];
+        $this->nome         = $registro['nome'];
+        $this->email        = $registro['email'];
+        $this->senha        = $registro['senha'] ?? '';
+        $this->dataCadastro = $registro['dataCadastro'] ?? null;
+        $this->perfil       = $registro['perfil'] ?? self::PERFIL_VIAJANTE;
+        $this->ativo        = $registro['ativo'] ?? true;
+    }
+
+    protected function toArray(): array
+    {
+        return [
+            'idUsuario'    => $this->idUsuario,
+            'nome'         => $this->nome,
+            'email'        => $this->email,
+            'senha'        => $this->senha,
+            'dataCadastro' => $this->dataCadastro,
+            'perfil'       => $this->perfil,
+            'ativo'        => $this->ativo
+        ];
+    }
 }

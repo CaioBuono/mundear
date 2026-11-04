@@ -1,0 +1,41 @@
+[
+    { "idHospedagem": 1, "nomeLocal": "Hotel Mirante da Orla", "tipo": "Hotel", "cidade": "Rio de Janeiro", "endereco": "Av. Atlântica, 1200 - Copacabana", "precoDiaria": 520.00, "avaliacao": 4.6 },
+    { "idHospedagem": 2, "nomeLocal": "Pousada Santa Teresa", "tipo": "Pousada", "cidade": "Rio de Janeiro", "endereco": "Rua Almirante Alexandrino, 340 - Santa Teresa", "precoDiaria": 310.00, "avaliacao": 4.4 },
+    { "idHospedagem": 3, "nomeLocal": "Hostel Carioca Raiz", "tipo": "Hostel", "cidade": "Rio de Janeiro", "endereco": "Rua Barata Ribeiro, 88 - Copacabana", "precoDiaria": 95.00, "avaliacao": 4.1 },
+
+    { "idHospedagem": 4, "nomeLocal": "Hotel Paulista Center", "tipo": "Hotel", "cidade": "São Paulo", "endereco": "Av. Paulista, 1500 - Bela Vista", "precoDiaria": 430.00, "avaliacao": 4.5 },
+    { "idHospedagem": 5, "nomeLocal": "Vila Madalena Studios", "tipo": "Pousada", "cidade": "São Paulo", "endereco": "Rua Aspicuelta, 210 - Vila Madalena", "precoDiaria": 280.00, "avaliacao": 4.3 },
+    { "idHospedagem": 6, "nomeLocal": "Hostel Liberdade", "tipo": "Hostel", "cidade": "São Paulo", "endereco": "Rua Galvão Bueno, 45 - Liberdade", "precoDiaria": 85.00, "avaliacao": 4.0 },
+
+    { "idHospedagem": 7, "nomeLocal": "Hotel Farol da Barra", "tipo": "Hotel", "cidade": "Salvador", "endereco": "Av. Oceânica, 300 - Barra", "precoDiaria": 410.00, "avaliacao": 4.5 },
+    { "idHospedagem": 8, "nomeLocal": "Pousada Pelourinho Colonial", "tipo": "Pousada", "cidade": "Salvador", "endereco": "Rua do Carmo, 12 - Pelourinho", "precoDiaria": 260.00, "avaliacao": 4.7 },
+    { "idHospedagem": 9, "nomeLocal": "Hostel Rio Vermelho", "tipo": "Hostel", "cidade": "Salvador", "endereco": "Rua da Paciência, 77 - Rio Vermelho", "precoDiaria": 80.00, "avaliacao": 4.2 },
+
+    { "idHospedagem": 10, "nomeLocal": "Resort Praia Mole", "tipo": "Hotel", "cidade": "Florianópolis", "endereco": "Rod. Jorn. Manoel de Menezes, 2001 - Praia Mole", "precoDiaria": 690.00, "avaliacao": 4.8 },
+    { "idHospedagem": 11, "nomeLocal": "Pousada Lagoa da Conceição", "tipo": "Pousada", "cidade": "Florianópolis", "endereco": "Rua Henrique Veras, 500 - Lagoa", "precoDiaria": 330.00, "avaliacao": 4.6 },
+    { "idHospedagem": 12, "nomeLocal": "Hostel Ilha da Magia", "tipo": "Hostel", "cidade": "Florianópolis", "endereco": "Rua Bocaiúva, 150 - Centro", "precoDiaria": 90.00, "avaliacao": 4.3 },
+
+    { "idHospedagem": 13, "nomeLocal": "Hotel Cataratas Park", "tipo": "Hotel", "cidade": "Foz do Iguaçu", "endereco": "Rod. das Cataratas, km 12", "precoDiaria": 480.00, "avaliacao": 4.7 },
+    { "idHospedagem": 14, "nomeLocal": "Pousada Três Fronteiras", "tipo": "Pousada", "cidade": "Foz do Iguaçu", "endereco": "Av. General Meira, 900", "precoDiaria": 220.00, "avaliacao": 4.4 },
+    { "idHospedagem": 15, "nomeLocal": "Hostel Trilha Verde", "tipo": "Hostel", "cidade": "Foz do Iguaçu", "endereco": "Rua Tarobá, 1020 - Centro", "precoDiaria": 75.00, "avaliacao": 4.1 },
+
+    { "idHospedagem": 16, "nomeLocal": "Hotel Bosque Encantado", "tipo": "Hotel", "cidade": "Gramado", "endereco": "Av. Borges de Medeiros, 2500", "precoDiaria": 610.00, "avaliacao": 4.8 },
+    { "idHospedagem": 17, "nomeLocal": "Pousada Vale das Hortênsias", "tipo": "Pousada", "cidade": "Gramado", "endereco": "Rua Garibaldi, 330", "precoDiaria": 390.00, "avaliacao": 4.6 },
+    { "idHospedagem": 18, "nomeLocal": "Hostel Serra Gaúcha", "tipo": "Hostel", "cidade": "Gramado", "endereco": "Rua São Pedro, 75", "precoDiaria": 120.00, "avaliacao": 4.2 },
+
+    { "idHospedagem": 19, "nomeLocal": "Hotel Boa Viagem Mar", "tipo": "Hotel", "cidade": "Recife", "endereco": "Av. Boa Viagem, 4000 - Boa Viagem", "precoDiaria": 380.00, "avaliacao": 4.4 },
+    { "idHospedagem": 20, "nomeLocal": "Pousada Recife Antigo", "tipo": "Pousada", "cidade": "Recife", "endereco": "Rua do Bom Jesus, 180 - Recife Antigo", "precoDiaria": 240.00, "avaliacao": 4.3 },
+    { "idHospedagem": 21, "nomeLocal": "Hostel Capibaribe", "tipo": "Hostel", "cidade": "Recife", "endereco": "Rua da Aurora, 520 - Boa Vista", "precoDiaria": 70.00, "avaliacao": 4.0 },
+
+    { "idHospedagem": 22, "nomeLocal": "Hotel Savassi Prime", "tipo": "Hotel", "cidade": "Belo Horizonte", "endereco": "Rua Pernambuco, 1100 - Savassi", "precoDiaria": 350.00, "avaliacao": 4.5 },
+    { "idHospedagem": 23, "nomeLocal": "Pousada Pampulha", "tipo": "Pousada", "cidade": "Belo Horizonte", "endereco": "Av. Otacílio Negrão de Lima, 600", "precoDiaria": 210.00, "avaliacao": 4.2 },
+    { "idHospedagem": 24, "nomeLocal": "Hostel Mineiro", "tipo": "Hostel", "cidade": "Belo Horizonte", "endereco": "Rua Gonçalves Dias, 90 - Funcionários", "precoDiaria": 65.00, "avaliacao": 4.1 },
+
+    { "idHospedagem": 25, "nomeLocal": "Hotel Beira-Mar Iracema", "tipo": "Hotel", "cidade": "Fortaleza", "endereco": "Av. Beira Mar, 2200 - Meireles", "precoDiaria": 400.00, "avaliacao": 4.5 },
+    { "idHospedagem": 26, "nomeLocal": "Pousada Praia do Futuro", "tipo": "Pousada", "cidade": "Fortaleza", "endereco": "Av. Zezé Diogo, 3500 - Praia do Futuro", "precoDiaria": 250.00, "avaliacao": 4.3 },
+    { "idHospedagem": 27, "nomeLocal": "Hostel Dragão do Mar", "tipo": "Hostel", "cidade": "Fortaleza", "endereco": "Rua Dragão do Mar, 60 - Praia de Iracema", "precoDiaria": 75.00, "avaliacao": 4.1 },
+
+    { "idHospedagem": 28, "nomeLocal": "Hotel Encontro das Águas", "tipo": "Hotel", "cidade": "Manaus", "endereco": "Av. Eduardo Ribeiro, 800 - Centro", "precoDiaria": 370.00, "avaliacao": 4.4 },
+    { "idHospedagem": 29, "nomeLocal": "Lodge Floresta Viva", "tipo": "Pousada", "cidade": "Manaus", "endereco": "Estrada do Turismo, km 8 - Ponta Negra", "precoDiaria": 560.00, "avaliacao": 4.7 },
+    { "idHospedagem": 30, "nomeLocal": "Hostel Amazonas", "tipo": "Hostel", "cidade": "Manaus", "endereco": "Rua 10 de Julho, 200 - Centro", "precoDiaria": 70.00, "avaliacao": 4.0 }
+]

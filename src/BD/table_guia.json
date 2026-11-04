@@ -1,0 +1,222 @@
+[
+    {
+        "idGuia": 1,
+        "nome": "Marina Albuquerque",
+        "telefone": "21987654321",
+        "especialidade": "História e arquitetura",
+        "cidadeAtuacao": "Rio de Janeiro",
+        "valorDiaria": 350,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:00:00"
+    },
+    {
+        "idGuia": 2,
+        "nome": "Rafael Couto",
+        "telefone": "21991234567",
+        "especialidade": "Trilhas e ecoturismo",
+        "cidadeAtuacao": "Rio de Janeiro",
+        "valorDiaria": 420,
+        "diaFolga": 0,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:05:00"
+    },
+    {
+        "idGuia": 3,
+        "nome": "Beatriz Nakamura",
+        "telefone": "11988887777",
+        "especialidade": "Gastronomia",
+        "cidadeAtuacao": "São Paulo",
+        "valorDiaria": 380,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:10:00"
+    },
+    {
+        "idGuia": 4,
+        "nome": "Lucas Ferraz",
+        "telefone": "11977776666",
+        "especialidade": "Arte urbana e museus",
+        "cidadeAtuacao": "São Paulo",
+        "valorDiaria": 300,
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:15:00"
+    },
+    {
+        "idGuia": 5,
+        "nome": "Iara Conceição",
+        "telefone": "71996665555",
+        "especialidade": "Cultura afro-brasileira",
+        "cidadeAtuacao": "Salvador",
+        "valorDiaria": 320,
+        "diaFolga": 2,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:20:00"
+    },
+    {
+        "idGuia": 6,
+        "nome": "Tiago Barreto",
+        "telefone": "71985554444",
+        "especialidade": "Praias e passeios de barco",
+        "cidadeAtuacao": "Salvador",
+        "valorDiaria": 290,
+        "diaFolga": 0,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:25:00"
+    },
+    {
+        "idGuia": 7,
+        "nome": "Helena Schmitt",
+        "telefone": "48999990000",
+        "especialidade": "Praias e trilhas",
+        "cidadeAtuacao": "Florianópolis",
+        "valorDiaria": 340,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:30:00"
+    },
+    {
+        "idGuia": 8,
+        "nome": "Pedro Lins",
+        "telefone": "48988881111",
+        "especialidade": "Esportes aquáticos",
+        "cidadeAtuacao": "Florianópolis",
+        "valorDiaria": 390,
+        "diaFolga": null,
+        "ativo": false,
+        "dataCadastro": "2026-09-20 10:35:00"
+    },
+    {
+        "idGuia": 9,
+        "nome": "Ana Paula Rocha",
+        "telefone": "45999112233",
+        "especialidade": "Cataratas e parques nacionais",
+        "cidadeAtuacao": "Foz do Iguaçu",
+        "valorDiaria": 360,
+        "diaFolga": 3,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:40:00"
+    },
+    {
+        "idGuia": 10,
+        "nome": "Diego Benítez",
+        "telefone": "45988223344",
+        "especialidade": "Compras e tríplice fronteira",
+        "cidadeAtuacao": "Foz do Iguaçu",
+        "valorDiaria": 280,
+        "diaFolga": 0,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:45:00"
+    },
+    {
+        "idGuia": 11,
+        "nome": "Carla Webber",
+        "telefone": "54999334455",
+        "especialidade": "Vinícolas e gastronomia",
+        "cidadeAtuacao": "Gramado",
+        "valorDiaria": 450,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:50:00"
+    },
+    {
+        "idGuia": 12,
+        "nome": "Gustavo Klein",
+        "telefone": "54988445566",
+        "especialidade": "Roteiros românticos",
+        "cidadeAtuacao": "Gramado",
+        "valorDiaria": 400,
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 10:55:00"
+    },
+    {
+        "idGuia": 13,
+        "nome": "Juliana Arruda",
+        "telefone": "81999556677",
+        "especialidade": "Centro histórico e frevo",
+        "cidadeAtuacao": "Recife",
+        "valorDiaria": 300,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:00:00"
+    },
+    {
+        "idGuia": 14,
+        "nome": "Marcos Tavares",
+        "telefone": "81988667788",
+        "especialidade": "Praias de Porto de Galinhas",
+        "cidadeAtuacao": "Recife",
+        "valorDiaria": 330,
+        "diaFolga": 0,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:05:00"
+    },
+    {
+        "idGuia": 15,
+        "nome": "Fernanda Lage",
+        "telefone": "31999778899",
+        "especialidade": "Cidades históricas mineiras",
+        "cidadeAtuacao": "Belo Horizonte",
+        "valorDiaria": 370,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:10:00"
+    },
+    {
+        "idGuia": 16,
+        "nome": "Otávio Prado",
+        "telefone": "31988889900",
+        "especialidade": "Botecos e culinária mineira",
+        "cidadeAtuacao": "Belo Horizonte",
+        "valorDiaria": 260,
+        "diaFolga": null,
+        "ativo": false,
+        "dataCadastro": "2026-09-20 11:15:00"
+    },
+    {
+        "idGuia": 17,
+        "nome": "Larissa Moreira",
+        "telefone": "85999001122",
+        "especialidade": "Dunas e buggy",
+        "cidadeAtuacao": "Fortaleza",
+        "valorDiaria": 310,
+        "diaFolga": 2,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:20:00"
+    },
+    {
+        "idGuia": 18,
+        "nome": "Bruno Sampaio",
+        "telefone": "85988112233",
+        "especialidade": "Praias do litoral leste",
+        "cidadeAtuacao": "Fortaleza",
+        "valorDiaria": 290,
+        "diaFolga": 0,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:25:00"
+    },
+    {
+        "idGuia": 19,
+        "nome": "Raimundo Batista",
+        "telefone": "92999223344",
+        "especialidade": "Selva amazônica",
+        "cidadeAtuacao": "Manaus",
+        "valorDiaria": 480,
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:30:00"
+    },
+    {
+        "idGuia": 20,
+        "nome": "Kauane Pereira",
+        "telefone": "92988334455",
+        "especialidade": "Cultura indígena e rios",
+        "cidadeAtuacao": "Manaus",
+        "valorDiaria": 420,
+        "diaFolga": 1,
+        "ativo": true,
+        "dataCadastro": "2026-09-20 11:35:00"
+    }
+]

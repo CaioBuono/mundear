@@ -1,41 +1,59 @@
-document.querySelector('#btnCadastroUsuario').addEventListener('click', function () {
-   document.querySelector('#boxNomeUsuario').innerHTML = getInputNomeUsuario();
-   document.querySelector('#boxConfirmarSenha').innerHTML = getInputConfirmarSenha();
-   document.querySelector('#btnAcessar').innerHTML = 'Cadastrar';
+// Alterna a tela entre "login" e "cadastro" sem recarregar a página.
+// Os campos extras do cadastro ficam desabilitados no modo login, então não
+// são enviados — é assim que o servidor diferencia as duas ações no POST /login.
+(function () {
+    const pagina = document.querySelector('#paginaLogin');
+    const textos = {
+        login: {
+            titulo: 'Bem-vindo de volta!',
+            subtitulo: 'Faça login para continuar planejando suas aventuras.',
+            botao: 'Entrar',
+            alternar: 'Ainda não tem conta?',
+            botaoAlternar: 'Cadastre-se',
+            autocompleteSenha: 'current-password'
+        },
+        cadastro: {
+            titulo: 'Crie sua conta',
+            subtitulo: 'Cadastre-se gratuitamente e comece a montar seus roteiros.',
+            botao: 'Cadastrar',
+            alternar: 'Já tem uma conta?',
+            botaoAlternar: 'Entrar com minha conta',
+            autocompleteSenha: 'new-password'
+        }
+    };
 
-   if(document.querySelector('#boxErroAuth')){
-       document.querySelector('#boxErroAuth').remove();
-   }
-});
+    function definirModo(modo, limparFeedback) {
+        const cadastro = modo === 'cadastro';
+        const texto = textos[modo];
 
-function getInputNomeUsuario()
-{
-    return `<label for="nome" class="mb-2 block text-sm font-semibold text-blue-950">
-                Nome
-            </label>
+        document.querySelector('#tituloForm').textContent = texto.titulo;
+        document.querySelector('#subtituloForm').textContent = texto.subtitulo;
+        document.querySelector('#btnAcessar').textContent = texto.botao;
+        document.querySelector('#textoAlternar').textContent = texto.alternar;
+        document.querySelector('#btnCadastroUsuario').textContent = texto.botaoAlternar;
+        document.querySelector('#senha').setAttribute('autocomplete', texto.autocompleteSenha);
 
-            <input
-                    id="nome"
-                    name="nome"
-                    type="text"
-                    placeholder="Seu nome"
-                    required
-                    class="h-13 w-full rounded-xl border border-slate-300 px-4 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-900 focus:ring-4 focus:ring-blue-100"
-            >`;
-}
+        ['#boxNomeUsuario', '#boxConfirmarSenha'].forEach(function (seletor) {
+            const box = document.querySelector(seletor);
+            box.classList.toggle('hidden', !cadastro);
+            box.querySelector('input').disabled = !cadastro;
+        });
 
-function getInputConfirmarSenha()
-{
-    return `<label for="confirm" class="mb-2 block text-sm font-semibold text-blue-950">
-                Confirmar Senha
-            </label>
+        document.querySelector('#boxOpcoesLogin').classList.toggle('hidden', cadastro);
+        pagina.dataset.modo = modo;
 
-            <input
-                    id="confirm"
-                    name="confirm"
-                    type="password"
-                    placeholder="Confirme a senha"
-                    required
-                    class="h-13 w-full rounded-xl border border-slate-300 px-4 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-900 focus:ring-4 focus:ring-blue-100"
-            >`;
-}
+        if (limparFeedback) {
+            document.querySelectorAll('#boxErroAuth, #paginaLogin [role="alert"]').forEach(function (alerta) {
+                alerta.remove();
+            });
+        }
+    }
+
+    document.querySelector('#btnCadastroUsuario').addEventListener('click', function () {
+        definirModo(pagina.dataset.modo === 'cadastro' ? 'login' : 'cadastro', true);
+        document.querySelector(pagina.dataset.modo === 'cadastro' ? '#nome' : '#email').focus();
+    });
+
+    // Quando o servidor devolve um erro de cadastro, a tela já abre no modo cadastro
+    definirModo(pagina.dataset.modo === 'cadastro' ? 'cadastro' : 'login', false);
+})();

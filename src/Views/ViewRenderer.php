@@ -2,28 +2,18 @@
 
 namespace Views;
 
+use Session\Session;
+
 class ViewRenderer
 {
-    public static function getLayout(array $variaveisLayout, array $paths, string $arquivo, bool $isAuth = false): string
+    /**
+     * Monta uma página completa: estrutura (header/footer) + conteúdo da view.
+     */
+    public static function getLayout(array $variaveisLayout, array $paths, string $arquivo, array $variaveisEstrutura = []): string
     {
-        $pathLayout = $paths['layout'] . $arquivo;
+        $conteudo = self::getComponente($variaveisLayout, $paths['layout'], $arquivo);
 
-        return self::getEstrutura(
-            $paths['estrutura'],
-            self::replace($variaveisLayout, file_get_contents($pathLayout)),
-            $isAuth
-        );
-    }
-
-    public static function getHeaderUsuarioAutenticado(array $dadosUsuario, string $path): string
-    {
-        $perfilUsuario = self::getPerfilUsuario($dadosUsuario, $path);
-
-        return self::getComponente(
-            ['perfilUsuario' => $perfilUsuario],
-            PATH_ESTRUTURA_PADRAO,
-            'header.php'
-        );
+        return self::getEstrutura($paths['estrutura'], $conteudo, $variaveisEstrutura);
     }
 
     public static function getComponente(array $variaveisLayout, string $pathComponente, string $arquivo): string
@@ -31,39 +21,37 @@ class ViewRenderer
         return self::replace($variaveisLayout, file_get_contents($pathComponente . $arquivo));
     }
 
-    private static function getEstrutura(string $path, string $conteudo, bool $isAuth = false): string
+    /**
+     * Renderiza o mesmo componente uma vez para cada conjunto de variáveis.
+     */
+    public static function getLista(array $listaVariaveis, string $pathComponente, string $arquivo): string
     {
-        if($isAuth){
-            return $conteudo . file_get_contents($path . 'footer.php');
-        }
+        $template = file_get_contents($pathComponente . $arquivo);
 
-        return file_get_contents($path . 'header.php') .
-               $conteudo .
-               file_get_contents($path . 'footer.php');
+        return implode(PHP_EOL, array_map(fn($variaveis) => self::replace($variaveis, $template), $listaVariaveis));
+    }
+
+    private static function getEstrutura(string $path, string $conteudo, array $variaveisEstrutura): string
+    {
+        $variaveisEstrutura += ['titulo' => 'Mundear'];
+
+        $pagina = self::replace($variaveisEstrutura, file_get_contents($path . 'header.php')) .
+                  $conteudo .
+                  self::replace($variaveisEstrutura, file_get_contents($path . 'footer.php'));
+
+        // Remove placeholders que não receberam valor
+        return preg_replace('/\{\{\w+\}\}/', '', $pagina);
     }
 
     private static function replace(array $variaveisLayout, string $conteudo): string
     {
-        if(empty($variaveisLayout)) return $conteudo;
+        // {{csrf}} vira automaticamente o campo oculto com o token anti-CSRF
+        $variaveisLayout += ['csrf' => '<input type="hidden" name="_csrf" value="' . Session::getTokenCsrf() . '">'];
 
         foreach($variaveisLayout as $key => $value){
-            $conteudo = str_replace('{{'.$key.'}}', $value, $conteudo);
+            $conteudo = str_replace('{{'.$key.'}}', (string) $value, $conteudo);
         }
 
         return $conteudo;
-    }
-
-    private static function getPerfilUsuario(array $dadosUsuario, string $pathComponent): string
-    {
-        $varLayout = [
-            'icone'       => $dadosUsuario['inicial'],
-            'nomeUsuario' => $dadosUsuario['nome']
-        ];
-
-        return self::getComponente(
-            $varLayout,
-            $pathComponent,
-            'usuario-perfil.php'
-        );
     }
 }
