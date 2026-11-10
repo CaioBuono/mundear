@@ -8,10 +8,6 @@ use Utils\Formatador;
 use Utils\Texto;
 use Views\Icones;
 
-/**
- * RF09 / RN06: visualização pública de um roteiro pelo link compartilhado.
- * Não exige login e não oferece nenhuma operação de alteração.
- */
 class CompartilhamentoController extends Controller
 {
     public static function getVisualizar(): string

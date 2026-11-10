@@ -2,9 +2,6 @@
 
 namespace Utils;
 
-/**
- * Utilitários de texto que não dependem da extensão mbstring.
- */
 class Texto
 {
     private const ACENTOS = [
@@ -21,9 +18,6 @@ class Texto
         'ç' => 'c', 'Ç' => 'c', 'ñ' => 'n', 'Ñ' => 'n',
     ];
 
-    /**
-     * Minúsculas, sem acentos e sem espaços extras. Ex.: " São  Paulo " => "sao paulo".
-     */
     public static function normalizar(string $texto): string
     {
         $texto = strtolower(strtr(trim($texto), self::ACENTOS));
@@ -45,9 +39,6 @@ class Texto
         return explode(' ', trim($nome))[0] ?? $nome;
     }
 
-    /**
-     * Iniciais para o avatar (ex.: "Yasmin Vida" => "YV"), seguras para UTF-8.
-     */
     public static function iniciais(string $nome): string
     {
         $partes = array_values(array_filter(explode(' ', trim($nome))));

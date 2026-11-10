@@ -4,144 +4,127 @@ namespace Controllers;
 
 use Models\Hospedagem;
 use Models\ItemRoteiro;
+use Models\OfertaHospedagem;
 use Models\Roteiro;
+use Services\ApiHospedagemSimulada;
 use Utils\Formatador;
 use Utils\Validador;
 use Views\Icones;
 use Views\ViewRenderer;
 
-/**
- * RF03: busca de hospedagens com filtros de cidade e período de estadia.
- */
 class HospedagemController extends BuscaController
 {
     private static $pathComponentesHospedagem = __DIR__ . '/../Views/hospedagem/components/';
 
-    private const TIPOS  = ['' => 'Todos os tipos', 'Hotel' => 'Hotel', 'Pousada' => 'Pousada', 'Hostel' => 'Hostel'];
-    private const ORDENS = ['avaliacao' => 'Melhor avaliação', 'preco' => 'Menor preço'];
+    private const MODOS = [
+        'hotel'     => ['rotulo' => 'Hotel', 'legenda' => 'quarto com serviço', 'tipos' => ['Hotel'], 'icone' => 'cama', 'cores' => '--mc:#2563c9;--ms:#e8f0fd;--mb:#bcd2f6'],
+        'hostel'    => ['rotulo' => 'Hostel', 'legenda' => 'econômico', 'tipos' => ['Hostel'], 'icone' => 'pessoas', 'cores' => '--mc:#d9580f;--ms:#fdeee4;--mb:#f6caa9'],
+        'fazenda'   => ['rotulo' => 'Hotel fazenda', 'legenda' => 'resort', 'tipos' => ['Hotel fazenda'], 'icone' => 'arvore', 'cores' => '--mc:#1f8a5b;--ms:#e3f4ec;--mb:#b4e0c9'],
+        'temporada' => ['rotulo' => 'Pousada e apartamento', 'legenda' => 'temporada', 'tipos' => ['Pousada', 'Apartamento'], 'icone' => 'chave', 'cores' => '--mc:#7046c9;--ms:#efe9fb;--mb:#d3c4f3']
+    ];
 
     public static function getBusca(): string
     {
         $obUsuario = self::exigirAutenticacao();
-        self::carregarRoteiros($obUsuario);
+        $obRoteiro = self::exigirRoteiroContexto($obUsuario);
+        $modo      = self::parametroPermitido('modo', self::MODOS, 'hotel');
+        $noites    = max(1, Validador::diasEntre($obRoteiro->getDataInicio(), $obRoteiro->getDataFim()));
+        $textoNoites = $noites . ($noites === 1 ? ' noite' : ' noites');
 
-        $contexto = self::$roteiroContexto;
-        $filtros  = [
-            'cidade'     => trim($_GET['cidade'] ?? self::getPrimeiraCidadeContexto()),
-            'dataInicio' => $_GET['dataInicio'] ?? ($contexto ? max($contexto->getDataInicio(), date('Y-m-d')) : ''),
-            'dataFim'    => $_GET['dataFim'] ?? ($contexto ? $contexto->getDataFim() : ''),
-            'pessoas'    => $_GET['pessoas'] ?? '2',
-            'tipo'       => self::parametroPermitido('tipo', self::TIPOS, ''),
-            'ordem'      => self::parametroPermitido('ordem', self::ORDENS, 'avaliacao')
-        ];
+        $hospedagens = array_values(array_filter(
+            Hospedagem::pesquisarPorCidade(self::getPrimeiraCidadeContexto(), $obRoteiro->getDataInicio(), $obRoteiro->getDataFim()),
+            fn(Hospedagem $obHospedagem) => in_array($obHospedagem->getTipo(), self::MODOS[$modo]['tipos'], true)
+        ));
 
-        // Com um roteiro de contexto todos os filtros já são conhecidos: busca automaticamente
-        $buscou = isset($_GET['cidade']) || ($contexto && $filtros['dataFim'] > $filtros['dataInicio']);
+        $cards = array_map(fn(Hospedagem $obHospedagem) => self::getDadosCard($obRoteiro, $obHospedagem, $modo, $noites, $textoNoites), $hospedagens);
 
-        $feedback   = '';
-        $resultados = self::getEstadoInicialBusca(
-            'Encontre onde ficar',
-            'Informe a cidade e o período da estadia para ver hotéis, pousadas e hostels de parceiros.'
-        );
+        $resultados = empty($cards)
+            ? '<div class="cartao text-center text-apagado">Ainda não temos hospedagens desse tipo em ' . self::e(self::getNomeDestino($obRoteiro)) . '. Tente outro tipo de hospedagem.</div>'
+            : ViewRenderer::getLista($cards, self::$pathComponentesHospedagem, 'card.php');
 
-        if($buscou){
-            $erros = self::validarFiltros($filtros);
+        return self::renderizarPagina('hospedagem/busca.php', [
+            'abas'       => self::getAbasModo('/hospedagem?roteiro=' . $obRoteiro->getIdRoteiro(), self::MODOS, $modo),
+            'rotulo'     => 'Ordenado por menor preço · valores para ' . $textoNoites,
+            'contagem'   => count($cards) . (count($cards) === 1 ? ' opção' : ' opções'),
+            'resultados' => $resultados
+        ], 'hospedagem', 'Hospedagem', [
+            'cabecalhoPagina' => self::getCabecalhoPagina($obRoteiro, 'Hospedagem', 'Compare o mesmo lugar em vários sites e escolha o menor preço.', self::MODOS[$modo]['icone'], self::MODOS[$modo]['cores']),
+            'barraEtapas'     => self::getBarraEtapas($obRoteiro, 'Hospedagem')
+        ]);
+    }
 
-            if(!empty($erros)){
-                $feedback   = self::getAlertaLista('erro', $erros);
-                $resultados = '';
-            }else{
-                $resultados = self::getResultados($filtros);
+    private static function getSiteNoRoteiro(Roteiro $obRoteiro, Hospedagem $obHospedagem): ?string
+    {
+        foreach($obRoteiro->getItens() as $obItem){
+            if($obItem->getTipoServico() === ItemRoteiro::TIPO_HOSPEDAGEM and (string) $obItem->getIdServico() === (string) $obHospedagem->getIdHospedagem()){
+                $partes = explode(' · via ', $obItem->getDetalhes());
+                return end($partes);
             }
         }
 
-        return self::renderizarPagina('hospedagem/busca.php', [
-            'bannerContexto'  => self::getBannerContexto(),
-            'campoContexto'   => self::getCampoRoteiroContexto(),
-            'feedback'        => $feedback,
-            'valorCidade'     => self::e($filtros['cidade']),
-            'valorDataInicio' => self::e($filtros['dataInicio']),
-            'valorDataFim'    => self::e($filtros['dataFim']),
-            'valorPessoas'    => self::e($filtros['pessoas']),
-            'dataMinima'      => date('Y-m-d'),
-            'opcoesTipo'      => self::opcoesSelect(self::TIPOS, $filtros['tipo']),
-            'opcoesOrdem'     => self::opcoesSelect(self::ORDENS, $filtros['ordem']),
-            'datalistCidades' => self::getDatalistCidades(),
-            'resultados'      => $resultados
-        ], 'hospedagem', 'Hospedagem');
+        return null;
     }
 
-    private static function validarFiltros(array $filtros): array
+    private static function getDadosCard(Roteiro $obRoteiro, Hospedagem $obHospedagem, string $modo, int $noites, string $textoNoites): array
     {
-        $erros = [];
+        $apresentacao = ApiHospedagemSimulada::buscarPorId($obHospedagem->getIdHospedagem()) ?? [];
+        $ofertas      = $obHospedagem->compararPrecos();
+        $obMenor      = $obHospedagem->obterMenorPreco();
+        $siteEscolhido = self::getSiteNoRoteiro($obRoteiro, $obHospedagem);
 
-        if($filtros['cidade'] === '') $erros[] = 'Informe a cidade da hospedagem.';
+        $camposAdicionar = fn(OfertaHospedagem $obOferta) => [
+            'tipoServico' => ItemRoteiro::TIPO_HOSPEDAGEM,
+            'idServico'   => $obHospedagem->getIdHospedagem(),
+            'dataInicio'  => $obRoteiro->getDataInicio(),
+            'dataFim'     => $obRoteiro->getDataFim(),
+            'pessoas'     => $obRoteiro->getQuantidadePessoas(),
+            'site'        => $obOferta->getNomeSite()
+        ];
 
-        $datasValidas = Validador::data($filtros['dataInicio']) && Validador::data($filtros['dataFim']);
-        if(!$datasValidas){
-            $erros[] = 'Informe as datas de entrada e de saída.';
-        }elseif($filtros['dataInicio'] < date('Y-m-d')){
-            $erros[] = 'A data de entrada não pode estar no passado.';
-        }elseif($filtros['dataFim'] <= $filtros['dataInicio']){
-            $erros[] = 'A data de saída deve ser posterior à data de entrada.';
-        }elseif(Validador::diasEntre($filtros['dataInicio'], $filtros['dataFim']) > Roteiro::DURACAO_MAXIMA_DIAS){
-            $erros[] = 'A estadia pode ter no máximo ' . Roteiro::DURACAO_MAXIMA_DIAS . ' diárias.';
+        $linhas = '';
+        foreach($ofertas as $indice => $obOferta){
+            $melhor    = $indice === 0;
+            $diferenca = ($obOferta->getPrecoDiaria() - $obMenor->getPrecoDiaria()) * $noites;
+            $acao      = $siteEscolhido === $obOferta->getNomeSite()
+                ? '<button class="rounded-lg bg-ok-suave px-3 py-[7px] text-[13px] font-bold text-ok" disabled>No roteiro ✓</button>'
+                : '<form method="POST" action="/roteiros/itens/adicionar">' . self::getCamposAdicionar($obRoteiro, $camposAdicionar($obOferta)) . '<button type="submit" class="rounded-lg bg-laranja px-3 py-[7px] text-[13px] font-bold text-white hover:bg-laranja-escuro">Escolher</button></form>';
+
+            $linhas .= sprintf(
+                '<tr class="%s"><td class="border-t border-linha px-2 py-2.5 %s"><span class="font-bold text-navy">%s</span> %s</td><td class="border-t border-linha px-2 py-2.5 text-right">%s</td><td class="border-t border-linha px-2 py-2.5 text-right"><b>%s</b></td><td class="border-t border-linha px-2 py-2.5 text-right">%s</td><td class="border-t border-linha px-2 py-2.5 %s"><div class="flex justify-end gap-2"><a href="%s" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 rounded-lg border border-linha bg-white px-3 py-[7px] text-[13px] font-bold text-navy hover:border-navy">%sVer no site</a>%s</div></td></tr>',
+                $melhor ? 'bg-ok-suave' : '',
+                $melhor ? 'rounded-l-md' : '',
+                self::e($obOferta->getNomeSite()),
+                $melhor ? '<span class="ml-1 rounded-full bg-white px-2 py-0.5 text-[11.5px] font-extrabold text-ok">Menor preço</span>' : '',
+                self::moeda($obOferta->getPrecoDiaria()),
+                self::moeda($obOferta->getPrecoDiaria() * $noites),
+                $melhor ? '–' : '+ ' . self::moeda($diferenca),
+                $melhor ? 'rounded-r-md' : '',
+                self::e($obOferta->getLinkReserva()),
+                Icones::get('externo', 'h-3.5 w-3.5'),
+                $acao
+            );
         }
 
-        if(!Validador::inteiroEntre($filtros['pessoas'], 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
-            $erros[] = 'A quantidade de hóspedes deve ficar entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.';
-        }
+        $rotuloBotao = $siteEscolhido !== null ? 'Trocar pelo menor preço' : 'Adicionar ao roteiro';
 
-        return $erros;
-    }
-
-    private static function getResultados(array $filtros): string
-    {
-        $hospedagens = Hospedagem::pesquisarPorCidade($filtros['cidade'], $filtros['dataInicio'], $filtros['dataFim']);
-        $diarias     = Validador::diasEntre($filtros['dataInicio'], $filtros['dataFim']);
-
-        if($filtros['tipo'] !== ''){
-            $hospedagens = array_values(array_filter($hospedagens, fn(Hospedagem $obHospedagem) => $obHospedagem->getTipo() === $filtros['tipo']));
-        }
-
-        $filtros['ordem'] === 'preco'
-            ? usort($hospedagens, fn($a, $b) => $a->getPrecoDiaria() <=> $b->getPrecoDiaria())
-            : usort($hospedagens, fn($a, $b) => $b->getAvaliacao() <=> $a->getAvaliacao());
-
-        if(empty($hospedagens)){
-            return self::getEstadoVazio('Nenhuma hospedagem encontrada', 'Não há opções dos nossos parceiros para essa cidade. Experimente um dos destinos sugeridos na lista.');
-        }
-
-        $cards = array_map(fn(Hospedagem $obHospedagem) => [
-            'nome'          => self::e($obHospedagem->getNomeLocal()),
-            'tipo'          => self::e($obHospedagem->getTipo()),
-            'endereco'      => self::e($obHospedagem->getEndereco()),
-            'cidade'        => self::e($obHospedagem->getCidade()),
-            'avaliacao'     => $obHospedagem->getDescricaoAvaliacao(),
-            'iconeEstrela'  => Icones::get('estrela', 'h-4 w-4 text-amber-400'),
-            'iconePin'      => Icones::get('pin', 'h-4 w-4 shrink-0 text-slate-400'),
-            'iconeCama'     => Icones::get('cama', 'h-8 w-8'),
-            'precoDiaria'   => self::moeda($obHospedagem->getPrecoDiaria()),
-            'resumoEstadia' => $diarias . ($diarias > 1 ? ' diárias' : ' diária') . ' · ' . Formatador::dataCurta($filtros['dataInicio']) . ' a ' . Formatador::dataCurta($filtros['dataFim']),
-            'subtotal'      => self::moeda($obHospedagem->calcularSubtotalEstadia($diarias)),
-            'formAdicionar' => self::getFormAdicionar([
-                'tipoServico' => ItemRoteiro::TIPO_HOSPEDAGEM,
-                'idServico'   => $obHospedagem->getIdHospedagem(),
-                'dataInicio'  => $filtros['dataInicio'],
-                'dataFim'     => $filtros['dataFim'],
-                'pessoas'     => (int) $filtros['pessoas']
-            ])
-        ], $hospedagens);
-
-        $titulo = sprintf(
-            '<p class="mb-4 text-sm text-slate-500"><strong class="text-blue-950">%d opções</strong> em %s · %s a %s · %d hóspede(s)</p>',
-            count($hospedagens),
-            self::e($filtros['cidade']),
-            Formatador::data($filtros['dataInicio']),
-            Formatador::data($filtros['dataFim']),
-            (int) $filtros['pessoas']
-        );
-
-        return $titulo . '<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">' . ViewRenderer::getLista($cards, self::$pathComponentesHospedagem, 'card.php') . '</div>';
+        return [
+            'cores'            => self::MODOS[$modo]['cores'],
+            'galeria'          => self::getGaleria($apresentacao['fotos'] ?? [], $obHospedagem->getNomeLocal()),
+            'nome'             => self::e($obHospedagem->getNomeLocal()),
+            'local'            => self::e($obHospedagem->getEndereco()),
+            'nota'             => str_replace('.', ',', (string) $obHospedagem->getAvaliacao()),
+            'quarto'           => self::e($apresentacao['quarto'] ?? $obHospedagem->getTipo()),
+            'comodidades'      => self::getEtiquetas($apresentacao['comodidades'] ?? [], ['Resort']),
+            'siteMenor'        => self::e($obMenor->getNomeSite()),
+            'total'            => self::moeda($obHospedagem->calcularSubtotalEstadia($noites)),
+            'porNoite'         => self::moeda($obMenor->getPrecoDiaria()) . ' por noite · ' . $textoNoites,
+            'idComparar'       => 'comparar-' . $obHospedagem->getIdHospedagem(),
+            'quantidadeSites'  => count($ofertas),
+            'textoNoites'      => $textoNoites,
+            'linhasComparacao' => $linhas,
+            'iconePin'         => Icones::get('pin', 'h-3.5 w-3.5'),
+            'iconeBaixo'       => Icones::get('baixo', 'h-4 w-4 transition group-aria-expanded:rotate-180'),
+            'botao'            => self::getBotaoAdicionar($obRoteiro, $camposAdicionar($obMenor), $siteEscolhido === $obMenor->getNomeSite(), $rotuloBotao)
+        ];
     }
 }

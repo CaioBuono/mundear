@@ -1,0 +1,170 @@
+[
+    {
+        "idTransporte": "a1",
+        "tipoTransporte": "voo",
+        "empresa": "Azul",
+        "subtitulo": "Linhas Aéreas",
+        "logo": "azul.png",
+        "horaPartida": "06:10",
+        "duracaoMinutos": 225,
+        "preco": 319.9,
+        "localOrigem": "Araçatuba (ARU)",
+        "localDestino": "Rio (SDU)",
+        "detalhes": "Araçatuba (ARU) → Rio (SDU) · 1 escala em Campinas (VCP) · Econômica",
+        "linkSite": "https://www.voeazul.com.br",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "a2",
+        "tipoTransporte": "voo",
+        "empresa": "GOL",
+        "subtitulo": "Linhas Aéreas",
+        "logo": "gol.png",
+        "horaPartida": "13:40",
+        "duracaoMinutos": 250,
+        "preco": 389.9,
+        "localOrigem": "São José do Rio Preto (SJP)",
+        "localDestino": "Rio (GIG)",
+        "detalhes": "São José do Rio Preto (SJP) → Rio (GIG) · 1 escala em Guarulhos (GRU) · Econômica",
+        "linkSite": "https://www.voegol.com.br",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "a3",
+        "tipoTransporte": "voo",
+        "empresa": "LATAM",
+        "subtitulo": "Linhas Aéreas",
+        "logo": "latam.png",
+        "horaPartida": "18:20",
+        "duracaoMinutos": 210,
+        "preco": 529.9,
+        "localOrigem": "São José do Rio Preto (SJP)",
+        "localDestino": "Rio (SDU)",
+        "detalhes": "São José do Rio Preto (SJP) → Rio (SDU) · 1 escala em Congonhas (CGH) · Econômica",
+        "linkSite": "https://www.latamairlines.com",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "o1",
+        "tipoTransporte": "onibus",
+        "empresa": "Expresso de Prata",
+        "subtitulo": "Rodoviário",
+        "logo": "expresso-de-prata.png",
+        "horaPartida": "10:00",
+        "duracaoMinutos": 1525,
+        "preco": 339.9,
+        "localOrigem": "Rodoviária de Birigui",
+        "localDestino": "Rodoviária Novo Rio",
+        "detalhes": "Rodoviária de Birigui → Rodoviária Novo Rio · 1 conexão em São Paulo · Convencional",
+        "linkSite": "https://www.expressodeprata.com.br",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "o2",
+        "tipoTransporte": "onibus",
+        "empresa": "Buser",
+        "subtitulo": "Fretamento por app",
+        "logo": "buser.png",
+        "horaPartida": "04:00",
+        "duracaoMinutos": 1080,
+        "preco": 244.9,
+        "localOrigem": "Araçatuba",
+        "localDestino": "Rodoviária Novo Rio",
+        "detalhes": "Araçatuba → Rodoviária Novo Rio · 1 conexão em São Paulo · Leito",
+        "linkSite": "https://www.buser.com.br",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "o3",
+        "tipoTransporte": "onibus",
+        "empresa": "Reunidas Paulista",
+        "subtitulo": "Rodoviário",
+        "logo": "reunidas-paulista.png",
+        "horaPartida": "13:30",
+        "duracaoMinutos": 1050,
+        "preco": 405,
+        "localOrigem": "Rodoviária de Araçatuba",
+        "localDestino": "Rodoviária Novo Rio",
+        "detalhes": "Rodoviária de Araçatuba → Rodoviária Novo Rio · Direto · Semileito",
+        "linkSite": "https://www.reunidaspaulista.com.br",
+        "assentosDisponiveis": 40,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "c1",
+        "tipoTransporte": "carona",
+        "empresa": "Juliana M.",
+        "subtitulo": "via BlaBlaCar · ★ 4,9",
+        "logo": "blablacar.png",
+        "horaPartida": "05:30",
+        "duracaoMinutos": 795,
+        "preco": 165,
+        "localOrigem": "Centro de Birigui",
+        "localDestino": "Rio de Janeiro",
+        "detalhes": "Saída: Centro de Birigui · 13h15 · 2 vagas · Honda Civic",
+        "linkSite": "https://www.blablacar.com.br",
+        "assentosDisponiveis": 2,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    },
+    {
+        "idTransporte": "c2",
+        "tipoTransporte": "carona",
+        "empresa": "Rafael S.",
+        "subtitulo": "via BlaBlaCar · ★ 4,8",
+        "logo": "blablacar.png",
+        "horaPartida": "06:00",
+        "duracaoMinutos": 780,
+        "preco": 180,
+        "localOrigem": "Posto Rodovia Marechal Rondon",
+        "localDestino": "Rio de Janeiro",
+        "detalhes": "Saída: Posto Rodovia Marechal Rondon · 13h · 3 vagas · VW Polo",
+        "linkSite": "https://www.blablacar.com.br",
+        "assentosDisponiveis": 3,
+        "cidadesOrigem": [
+            "Birigui",
+            "Araçatuba",
+            "São José do Rio Preto"
+        ],
+        "cidadeDestino": "Rio de Janeiro"
+    }
+]

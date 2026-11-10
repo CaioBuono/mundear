@@ -2,17 +2,10 @@
 
 namespace Models;
 
-use Exceptions\RegraNegocioException;
+use Exceptions\DadosInvalidosException;
 use Utils\Formatador;
 use Utils\Validador;
 
-/**
- * Ligação entre o Roteiro e um serviço (composição Roteiro ◆— ItemRoteiro).
- *
- * Cada item representa apenas UM tipo de serviço e guarda uma "fotografia"
- * dele (nome, detalhes e valor no momento da escolha). Assim o roteiro continua
- * correto mesmo que o serviço original mude de preço ou seja inativado.
- */
 class ItemRoteiro
 {
     const TIPO_TRANSPORTE = 'transporte';
@@ -34,10 +27,8 @@ class ItemRoteiro
 
     private string $dataAgendada;
 
-    /** Data de saída (check-out) — usada apenas por hospedagens. */
     private ?string $dataFim = null;
 
-    /** Horário de partida — usado apenas por transportes. */
     private ?string $horario = null;
 
     private int $quantidadePessoas = 1;
@@ -48,32 +39,33 @@ class ItemRoteiro
 
     private float $subtotal = 0;
 
-    public static function criarDeServico(ServicoRoteiro $servico, string $dataAgendada, int $quantidadePessoas, ?string $dataFim = null, ?string $horario = null): ItemRoteiro
+    private ?Transporte $transporte = null;
+
+    public static function criarDeServico(ServicoRoteiro $servico, string $dataAgendada, int $quantidadePessoas, ?string $dataFim = null, ?string $horario = null, ?float $valorUnitario = null, ?string $detalhes = null): ItemRoteiro
     {
         $obItem                    = new ItemRoteiro();
         $obItem->tipoServico       = $servico->getTipoServico();
         $obItem->idServico         = $servico->getIdServico();
         $obItem->descricao         = $servico->getNomeServico();
-        $obItem->detalhes          = $servico->getDetalhesServico();
-        $obItem->valorUnitario     = $servico->getValorUnitario();
+        $obItem->detalhes          = $detalhes ?? $servico->getDetalhesServico();
+        $obItem->valorUnitario     = $valorUnitario ?? $servico->getValorUnitario();
         $obItem->dataAgendada      = $dataAgendada;
         $obItem->dataFim           = $dataFim;
         $obItem->horario           = $horario;
         $obItem->quantidadeDiarias = $dataFim ? max(1, Validador::diasEntre($dataAgendada, $dataFim)) : 1;
+        $obItem->transporte        = $servico instanceof Transporte ? $servico : null;
         $obItem->atualizarQuantidade($quantidadePessoas);
 
         return $obItem;
     }
 
-    // ------------------------------------------------------------------
-    // Métodos do diagrama de classes
-    // ------------------------------------------------------------------
-
-    /**
-     * Transporte e passeio são cobrados por pessoa; hospedagem e guia, por diária.
-     */
     public function calcularSubtotal(): float
     {
+        if($this->transporte !== null){
+            $this->subtotal = $this->transporte->calcularCusto($this->quantidadePessoas);
+            return $this->subtotal;
+        }
+
         $quantidade = $this->isCobradoPorPessoa() ? $this->quantidadePessoas : $this->quantidadeDiarias;
         $this->subtotal = round($this->valorUnitario * $quantidade, 2);
 
@@ -83,7 +75,7 @@ class ItemRoteiro
     public function atualizarQuantidade(int $quantidadePessoas): void
     {
         if($quantidadePessoas < 1 or $quantidadePessoas > self::QUANTIDADE_MAXIMA_PESSOAS){
-            throw new RegraNegocioException('A quantidade de pessoas deve ficar entre 1 e ' . self::QUANTIDADE_MAXIMA_PESSOAS . '.');
+            throw new DadosInvalidosException('A quantidade de pessoas deve ficar entre 1 e ' . self::QUANTIDADE_MAXIMA_PESSOAS . '.', 'RN02');
         }
 
         $this->quantidadePessoas = $quantidadePessoas;
@@ -100,10 +92,6 @@ class ItemRoteiro
             Formatador::moeda($this->subtotal)
         );
     }
-
-    // ------------------------------------------------------------------
-    // Apoio
-    // ------------------------------------------------------------------
 
     public function isCobradoPorPessoa(): bool
     {
@@ -131,6 +119,10 @@ class ItemRoteiro
         $pessoas = $this->quantidadePessoas . ($this->quantidadePessoas > 1 ? ' pessoas' : ' pessoa');
         $diarias = $this->quantidadeDiarias . ($this->quantidadeDiarias > 1 ? ' diárias' : ' diária');
 
+        if($this->transporte instanceof VeiculoPessoal){
+            return 'estimativa do veículo · ' . $pessoas;
+        }
+
         return match($this->tipoServico){
             self::TIPO_TRANSPORTE => $pessoas . ' × ' . $valor,
             self::TIPO_PASSEIO    => $this->valorUnitario > 0 ? $pessoas . ' × ' . $valor : $pessoas . ' · entrada gratuita',
@@ -152,6 +144,7 @@ class ItemRoteiro
     public function getQuantidadeDiarias(): int { return $this->quantidadeDiarias; }
     public function getValorUnitario(): float { return $this->valorUnitario; }
     public function getSubtotal(): float { return $this->subtotal; }
+    public function getTransporte(): ?Transporte { return $this->transporte; }
 
     public static function fromArray(array $dados): ItemRoteiro
     {
@@ -167,6 +160,7 @@ class ItemRoteiro
         $obItem->quantidadePessoas = (int) $dados['quantidadePessoas'];
         $obItem->quantidadeDiarias = (int) ($dados['quantidadeDiarias'] ?? 1);
         $obItem->valorUnitario     = (float) $dados['valorUnitario'];
+        $obItem->transporte        = !empty($dados['transporte']) ? Transporte::fromArray($dados['transporte']) : null;
         $obItem->calcularSubtotal();
 
         return $obItem;
@@ -186,7 +180,8 @@ class ItemRoteiro
             'quantidadePessoas' => $this->quantidadePessoas,
             'quantidadeDiarias' => $this->quantidadeDiarias,
             'valorUnitario'     => $this->valorUnitario,
-            'subtotal'          => $this->subtotal
+            'subtotal'          => $this->subtotal,
+            'transporte'        => $this->transporte?->toArray()
         ];
     }
 }

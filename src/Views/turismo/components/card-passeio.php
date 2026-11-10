@@ -1,25 +1,17 @@
-<article class="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="flex items-start gap-4">
-        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-700">{{iconeIngresso}}</span>
+<article class="cartao border-l-4 border-l-(--mc) !p-0" style="{{cores}}">
+    <div class="grid items-center gap-5 py-3.5 pl-3.5 pr-[18px] md:grid-cols-[220px_minmax(0,1fr)_auto]">
+        {{galeria}}
+
         <div class="min-w-0">
-            <h3 class="font-semibold text-blue-950">{{nome}}</h3>
-            <p class="text-sm text-slate-500">{{cidade}}</p>
-            <div class="mt-1">{{disponibilidade}}</div>
+            <h3 class="text-[16.5px] font-bold">{{nome}}</h3>
+            <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[13px] text-apagado">{{iconePin}}{{local}} · duração média {{duracao}}</div>
+            <div class="mt-2 flex flex-wrap gap-1.5">{{etiquetas}}</div>
         </div>
-    </div>
 
-    <ul class="mt-4 space-y-1.5 text-sm text-slate-600">
-        <li class="flex items-start gap-2">{{iconePin}} {{localizacao}}</li>
-        <li class="flex items-center gap-2">{{iconeRelogio}} Duração aprox. {{duracao}} · {{funcionamento}}</li>
-    </ul>
-
-    <div class="mt-auto pt-5">
-        <div class="flex items-baseline justify-between border-t border-slate-100 pt-4">
-            <span class="text-sm text-slate-500">{{detalhePreco}}</span>
-            <span class="text-xl font-bold text-orange-500">{{preco}}</span>
-        </div>
-        <div class="mt-4">
-            {{formAdicionar}}
+        <div class="flex flex-col items-start gap-2 md:items-end">
+            <span class="font-display text-[21px] font-extrabold leading-tight text-(--mc)">{{total}}</span>
+            <span class="text-xs text-apagado md:text-right">{{porPessoa}}</span>
+            <div class="flex flex-wrap gap-2 md:justify-end">{{botao}}</div>
         </div>
     </div>
 </article>

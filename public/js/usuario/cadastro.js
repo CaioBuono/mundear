@@ -1,6 +1,3 @@
-// Alterna a tela entre "login" e "cadastro" sem recarregar a página.
-// Os campos extras do cadastro ficam desabilitados no modo login, então não
-// são enviados — é assim que o servidor diferencia as duas ações no POST /login.
 (function () {
     const pagina = document.querySelector('#paginaLogin');
     const textos = {
@@ -54,6 +51,5 @@
         document.querySelector(pagina.dataset.modo === 'cadastro' ? '#nome' : '#email').focus();
     });
 
-    // Quando o servidor devolve um erro de cadastro, a tela já abre no modo cadastro
     definirModo(pagina.dataset.modo === 'cadastro' ? 'cadastro' : 'login', false);
 })();

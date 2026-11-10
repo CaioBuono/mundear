@@ -6,9 +6,6 @@ use Session\Session;
 
 class ViewRenderer
 {
-    /**
-     * Monta uma página completa: estrutura (header/footer) + conteúdo da view.
-     */
     public static function getLayout(array $variaveisLayout, array $paths, string $arquivo, array $variaveisEstrutura = []): string
     {
         $conteudo = self::getComponente($variaveisLayout, $paths['layout'], $arquivo);
@@ -21,9 +18,6 @@ class ViewRenderer
         return self::replace($variaveisLayout, file_get_contents($pathComponente . $arquivo));
     }
 
-    /**
-     * Renderiza o mesmo componente uma vez para cada conjunto de variáveis.
-     */
     public static function getLista(array $listaVariaveis, string $pathComponente, string $arquivo): string
     {
         $template = file_get_contents($pathComponente . $arquivo);
@@ -33,19 +27,17 @@ class ViewRenderer
 
     private static function getEstrutura(string $path, string $conteudo, array $variaveisEstrutura): string
     {
-        $variaveisEstrutura += ['titulo' => 'Mundear'];
+        $variaveisEstrutura += ['titulo' => 'Mundear', 'tema' => file_get_contents(__DIR__ . '/layouts/tema.php')];
 
         $pagina = self::replace($variaveisEstrutura, file_get_contents($path . 'header.php')) .
                   $conteudo .
                   self::replace($variaveisEstrutura, file_get_contents($path . 'footer.php'));
 
-        // Remove placeholders que não receberam valor
         return preg_replace('/\{\{\w+\}\}/', '', $pagina);
     }
 
     private static function replace(array $variaveisLayout, string $conteudo): string
     {
-        // {{csrf}} vira automaticamente o campo oculto com o token anti-CSRF
         $variaveisLayout += ['csrf' => '<input type="hidden" name="_csrf" value="' . Session::getTokenCsrf() . '">'];
 
         foreach($variaveisLayout as $key => $value){

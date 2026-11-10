@@ -4,9 +4,6 @@ namespace Controllers;
 
 use Session\Session;
 
-/**
- * Páginas de erro amigáveis (RNF04): nunca exibem detalhes técnicos.
- */
 class ErroController extends Controller
 {
     public static function exibir(int $status, string $titulo, string $mensagem): string

@@ -4,17 +4,18 @@ namespace Controllers;
 
 use Exceptions\RegraNegocioException;
 use Models\Administrador;
+use Models\Destino;
 use Models\Roteiro;
 use Session\Session;
 use Utils\Formatador;
 use Utils\Texto;
 use Utils\Validador;
+use Views\Icones;
 use Views\ViewRenderer;
 use Models\Usuario;
 
 class UsuarioController extends Controller
 {
-
     private static $pathEstruturaAuth = __DIR__ . '/../Views/layouts/auth/';
 
     private static $pathViewUsuario = __DIR__ . '/../Views/usuario/';
@@ -26,44 +27,88 @@ class UsuarioController extends Controller
         'confirm' => 'Confirmar senha'
     ];
 
-    // ------------------------------------------------------------------
-    // Cadastro, login e logout (RF01)
-    // ------------------------------------------------------------------
+    private static function validarCadastro(array $dados, bool $exigirConfirmacao): ?string
+    {
+        $camposObrigatorios = $exigirConfirmacao ? ['nome', 'email', 'senha', 'confirm'] : ['nome', 'email', 'senha'];
+
+        $validacaoCampos = self::validarCamposObrigatorios($dados, $camposObrigatorios);
+        if(!empty($validacaoCampos)){
+            $nomesCampos = array_map(fn($campo) => self::NOMES_CAMPOS[$campo], array_unique($validacaoCampos));
+            return 'Preencha corretamente: ' . implode(', ', $nomesCampos) . '.';
+        }
+
+        if(strlen(trim($dados['nome'])) < 3){
+            return 'Informe seu nome com pelo menos 3 caracteres.';
+        }
+
+        if(Usuario::getUsuario($dados['email']) instanceof Usuario){
+            return 'Já existe um usuário com esse e-mail.';
+        }
+
+        if(strlen($dados['senha']) < Usuario::TAMANHO_MINIMO_SENHA){
+            return 'A senha deve ter pelo menos ' . Usuario::TAMANHO_MINIMO_SENHA . ' caracteres.';
+        }
+
+        if($exigirConfirmacao and $dados['senha'] !== $dados['confirm']){
+            return 'O campo de confirmação deve ser igual à senha.';
+        }
+
+        return null;
+    }
 
     public static function cadastrar(): string
     {
-        $validacaoCampos = self::validarCamposObrigatorios($_POST, ['nome', 'email', 'senha', 'confirm']);
-        if(!empty($validacaoCampos)){
-            $nomesCampos = array_map(fn($campo) => self::NOMES_CAMPOS[$campo], array_unique($validacaoCampos));
-            return self::retornarFeedbackErroCadastro('Preencha corretamente: ' . implode(', ', $nomesCampos) . '.');
-        }
-
-        if(strlen(trim($_POST['nome'])) < 3){
-            return self::retornarFeedbackErroCadastro('Informe seu nome com pelo menos 3 caracteres.');
-        }
-
-        $obUsuario = Usuario::getUsuario($_POST['email']);
-        if($obUsuario instanceof  Usuario){
-            return self::retornarFeedbackErroCadastro('Já existe um usuário com esse e-mail');
-        }
-
-        //VALIDAR SENHAS
-        if(strlen($_POST['senha']) < Usuario::TAMANHO_MINIMO_SENHA){
-            return self::retornarFeedbackErroCadastro('A senha deve ter pelo menos ' . Usuario::TAMANHO_MINIMO_SENHA . ' caracteres.');
-        }
-
-        if($_POST['senha'] != $_POST['confirm']){
-            return self::retornarFeedbackErroCadastro('O campo de confirmação deve ser igual a senha');
+        $erro = self::validarCadastro($_POST, true);
+        if($erro !== null){
+            return self::retornarFeedbackErroCadastro($erro);
         }
 
         $obUsuario = new Usuario();
-        $sucessoCadastro = $obUsuario->cadastrar($_POST);
-        if(!$sucessoCadastro){
+        if(!$obUsuario->cadastrar($_POST)){
             return self::retornarFeedbackErroCadastro('Ocorreu um erro ao cadastrar o usuário');
         }
 
         $mensagemSucesso = ViewRenderer::getComponente(['mensagem' => 'Usuário cadastrado com sucesso. Agora é só entrar com seu e-mail e senha.'], self::$pathComponentsUsuario, 'sucesso-cadastro.php');
         return self::renderizarLogin(['feedback' => $mensagemSucesso, 'valorEmail' => self::e($obUsuario->getEmail())]);
+    }
+
+    public static function postCadastro(): string
+    {
+        $erro = empty($_POST['aceiteLgpd'])
+            ? 'Para criar a conta, aceite os termos de uso e a política de privacidade.'
+            : self::validarCadastro($_POST, false);
+
+        if($erro !== null){
+            return self::renderizarLanding($_POST, $erro);
+        }
+
+        $obUsuario = new Usuario();
+        if(!$obUsuario->cadastrar($_POST)){
+            return self::renderizarLanding($_POST, 'Não foi possível criar sua conta agora. Tente novamente.');
+        }
+
+        Session::setFlash('sucesso', 'Conta criada! Agora é só entrar com seu e-mail e senha.');
+        self::redirecionar('/login');
+    }
+
+    private static function renderizarLanding(array $valores, string $erro): string
+    {
+        return self::renderizarPaginaAvulsa('site/landing.php', [
+            'valorNome'           => self::e($valores['nome'] ?? ''),
+            'valorEmail'          => self::e($valores['email'] ?? ''),
+            'aceiteMarcado'       => empty($valores['aceiteLgpd']) ? '' : 'checked',
+            'erroCadastro'        => $erro === '' ? '' : '<div class="erro-campos">' . Icones::get('alerta', 'h-[18px] w-[18px] flex-none') . '<span>' . self::e($erro) . '</span></div>',
+            'rolarParaCadastro'   => $erro === '' ? '' : '<script>document.getElementById("criar-conta").scrollIntoView();</script>',
+            'iconeSeta'           => Icones::get('seta', 'h-[18px] w-[18px]'),
+            'iconeCheck'          => Icones::get('check', 'h-[18px] w-[18px] flex-none'),
+            'iconeBaixo'          => Icones::get('baixo', 'h-5 w-5'),
+            'iconeOnibus'         => Icones::get('onibus', 'h-[17px] w-[17px]'),
+            'iconeCama'           => Icones::get('cama', 'h-[17px] w-[17px]'),
+            'iconePessoas'        => Icones::get('pessoas', 'h-[17px] w-[17px]'),
+            'iconeAviaoGrande'    => Icones::get('aviao', 'h-[26px] w-[26px]'),
+            'iconeCamaGrande'     => Icones::get('cama', 'h-[26px] w-[26px]'),
+            'iconeCarteiraGrande' => Icones::get('carteira', 'h-[26px] w-[26px]')
+        ], 'Planeje sua viagem');
     }
 
     public static function login(): string
@@ -84,7 +129,6 @@ class UsuarioController extends Controller
             return self::retornarFeedbackErroLogin('Credenciais inválidas', 'Tente autenticar novamente', $email);
         }
 
-        // RN08: usuário inativado não acessa o sistema
         if(!$obUsuario->isAtivo()){
             return self::retornarFeedbackErroLogin('Conta inativa', 'Sua conta foi inativada por um administrador e não pode acessar os roteiros.', $email);
         }
@@ -96,7 +140,7 @@ class UsuarioController extends Controller
             Session::lembrarUsuario();
         }
 
-        self::redirecionar($obUsuario->isAdministrador() ? '/admin' : '/home');
+        self::redirecionar($obUsuario->obterTelaInicial());
     }
 
     public static function logout(): void
@@ -108,22 +152,19 @@ class UsuarioController extends Controller
         exit();
     }
 
-    public static function getRaiz(): void
+    public static function getRaiz(): string
     {
-        if(!self::verificarAutenticacao()){
-            header('Location: /login');
-            exit();
+        if(self::verificarAutenticacao()){
+            self::redirecionar(self::exigirAutenticacao()->obterTelaInicial());
         }
 
-        header('Location: /home');
-        exit();
+        return self::renderizarLanding([], '');
     }
 
     public static function getLogin(): string
     {
         if(self::verificarAutenticacao()){
-            header('Location: /home');
-            exit();
+            self::redirecionar(self::exigirAutenticacao()->obterTelaInicial());
         }
 
         $flash = self::getFlashHtml();
@@ -162,39 +203,50 @@ class UsuarioController extends Controller
         ]);
     }
 
-    // ------------------------------------------------------------------
-    // Página inicial (painel do viajante)
-    // ------------------------------------------------------------------
-
     public static function getHome(): string
+    {
+        return self::renderizarHome([], []);
+    }
+
+    public static function renderizarHome(array $valores, array $erros): string
     {
         $obUsuario = self::exigirAutenticacao();
         $roteiros  = Roteiro::listarPorUsuario($obUsuario->getIdUsuario());
-        $hoje      = date('Y-m-d');
+        $proximos  = array_values(array_filter($roteiros, fn(Roteiro $obRoteiro) => $obRoteiro->getDataFim() >= date('Y-m-d')));
 
-        $proximos  = array_values(array_filter($roteiros, fn(Roteiro $obRoteiro) => $obRoteiro->getDataFim() >= $hoje));
-        $recentes  = $roteiros;
-        usort($recentes, fn($a, $b) => strcmp((string) $b->getDataAtualizacao(), (string) $a->getDataAtualizacao()));
-
-        $roteirosRecentes = empty($recentes)
-            ? self::getEstadoVazio('Você ainda não tem roteiros', 'Comece criando um roteiro e vá adicionando transporte, hospedagem, guias e passeios.', '<a href="/roteiros/novo" class="btn-destaque mt-5">Criar meu primeiro roteiro</a>')
-            : '<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">' . RoteiroController::getCardsRoteiros(array_slice($recentes, 0, 3)) . '</div>';
+        $contarStatus = fn(string $status) => count(array_filter($roteiros, fn(Roteiro $obRoteiro) => $obRoteiro->getStatus() === $status));
 
         return self::renderizarPagina('usuario/home.php', [
             'primeiroNome'      => self::e(Texto::primeiroNome($obUsuario->getNome())),
-            'totalRoteiros'     => count($roteiros),
-            'totalFinalizados'  => count(array_filter($roteiros, fn(Roteiro $obRoteiro) => $obRoteiro->isFinalizado())),
-            'valorPlanejado'    => self::moeda(array_sum(array_map(fn(Roteiro $obRoteiro) => $obRoteiro->getValorTotalEstimado(), $roteiros))),
             'proximaViagem'     => self::getDestaqueProximaViagem($proximos[0] ?? null),
-            'roteirosRecentes'  => $roteirosRecentes,
-            'linkVerTodos'      => count($roteiros) > 3 ? '<a href="/roteiros" class="text-sm font-semibold text-blue-700 hover:underline">Ver todos</a>' : ''
+            'feedbackPlano'     => empty($erros) ? '' : '<div class="erro-campos">' . Icones::get('alerta', 'h-[18px] w-[18px] flex-none') . '<span>' . self::e(implode(' ', $erros)) . '</span></div>',
+            'valorTitulo'       => self::e($valores['titulo'] ?? ''),
+            'valorOrigem'       => self::e($valores['origem'] ?? ''),
+            'valorDestino'      => self::e($valores['destino'] ?? ''),
+            'valorDataInicio'   => self::e($valores['dataInicio'] ?? ''),
+            'valorDataFim'      => self::e($valores['dataFim'] ?? ''),
+            'valorPessoas'      => self::e($valores['quantidadePessoas'] ?? '2'),
+            'valorOrcamento'    => self::e($valores['orcamento'] ?? ''),
+            'dataMinima'        => date('Y-m-d'),
+            'datalistDestinos'  => implode('', array_map(fn(Destino $obDestino) => '<option value="' . self::e($obDestino->getCidade() . ' - ' . $obDestino->getEstado()) . '"></option>', Destino::listar())),
+            'totalPlanejamento' => $contarStatus(Roteiro::STATUS_EM_PLANEJAMENTO),
+            'totalProntos'      => $contarStatus(Roteiro::STATUS_PRONTO_PARA_VIAJAR),
+            'totalRealizadas'   => $contarStatus(Roteiro::STATUS_VIAGEM_REALIZADA),
+            'iconeSeta'         => Icones::get('seta', 'h-[18px] w-[18px]'),
+            'iconeLista'        => Icones::get('lista', 'h-6 w-6'),
+            'iconeCheck'        => Icones::get('check', 'h-6 w-6'),
+            'iconeMapa'         => Icones::get('mapa', 'h-6 w-6')
         ], 'inicio', 'Início');
     }
 
     private static function getDestaqueProximaViagem(?Roteiro $obRoteiro): string
     {
         if(!$obRoteiro){
-            return '<p class="text-sm text-white/80">Nenhuma viagem marcada. Que tal planejar a próxima?</p>';
+            return '<div class="flex w-full flex-col gap-1.5 rounded-xl border border-white/30 bg-[rgba(15,29,54,.3)] px-5 py-[18px] text-white backdrop-blur-[3px]">
+                <span class="text-xs font-extrabold uppercase tracking-[.08em] text-laranja-claro">Próxima viagem</span>
+                <b class="font-display text-[19px]">Nenhuma viagem marcada</b>
+                <span class="text-[13.5px] text-[#dbe3f1]">Preencha o quadro abaixo e comece a planejar.</span>
+            </div>';
         }
 
         $diasParaViagem = Validador::diasEntre(date('Y-m-d'), $obRoteiro->getDataInicio());
@@ -206,23 +258,23 @@ class UsuarioController extends Controller
         };
 
         return sprintf(
-            '<a href="/roteiros/editar?id=%d" class="block rounded-2xl bg-white/15 p-4 ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20">
-                <p class="text-xs font-semibold uppercase tracking-wide text-orange-300">Próxima viagem · %s</p>
-                <p class="mt-1 text-lg font-semibold">%s</p>
-                <p class="text-sm text-white/80">%s · %s a %s</p>
+            '<a href="/roteiros/editar?id=%d" class="flex w-full flex-col gap-1.5 rounded-xl border border-white/30 bg-[rgba(15,29,54,.3)] px-5 py-[18px] text-left text-white backdrop-blur-[3px] transition hover:bg-[rgba(15,29,54,.45)]">
+                <span class="text-xs font-extrabold uppercase tracking-[.08em] text-laranja-claro">Próxima viagem · %s</span>
+                <b class="font-display text-[19px]">%s</b>
+                <span class="text-[13.5px] text-[#dbe3f1]">%s · %s – %s · %d %s</span>
+                <span class="mt-1 flex items-baseline justify-between border-t border-white/20 pt-2.5 text-[13px] text-[#dbe3f1]">Valor total <strong class="font-display text-xl text-white">%s</strong></span>
             </a>',
             $obRoteiro->getIdRoteiro(),
             self::e($contagem),
             self::e($obRoteiro->getTitulo()),
             self::e($obRoteiro->getNomesDestinos()),
             Formatador::data($obRoteiro->getDataInicio()),
-            Formatador::data($obRoteiro->getDataFim())
+            Formatador::data($obRoteiro->getDataFim()),
+            $obRoteiro->getQuantidadePessoas(),
+            $obRoteiro->getQuantidadePessoas() > 1 ? 'pessoas' : 'pessoa',
+            self::moeda($obRoteiro->calcularValorTotal())
         );
     }
-
-    // ------------------------------------------------------------------
-    // Gerenciamento de perfil
-    // ------------------------------------------------------------------
 
     public static function getPerfil(): string
     {
@@ -262,7 +314,7 @@ class UsuarioController extends Controller
         }
 
         try{
-            $obUsuario->atualizarDados($nome, $email);
+            $obUsuario->atualizarDados($nome, $email, $obUsuario->isReceberEmails());
             Session::setUsuario($obUsuario);
             Session::setFlash('sucesso', 'Seus dados foram atualizados.');
         }catch(RegraNegocioException $e){
@@ -300,10 +352,6 @@ class UsuarioController extends Controller
         self::redirecionar('/perfil');
     }
 
-    // ------------------------------------------------------------------
-    // Recuperação de senha
-    // ------------------------------------------------------------------
-
     public static function getRecuperarSenha(): string
     {
         if(self::verificarAutenticacao()){
@@ -324,7 +372,6 @@ class UsuarioController extends Controller
             ], 'Recuperar senha');
         }
 
-        // A resposta é a mesma exista ou não a conta (não revela e-mails cadastrados)
         Usuario::recuperarSenha($email);
 
         $mensagem = 'Se houver uma conta ativa com esse e-mail, enviamos um link para criar uma nova senha. O link vale por 1 hora.';

@@ -2,9 +2,6 @@
 
 namespace Utils;
 
-/**
- * Formatação de valores para exibição (padrão brasileiro).
- */
 class Formatador
 {
     private const DIAS_SEMANA = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];

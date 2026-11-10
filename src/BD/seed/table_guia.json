@@ -1,0 +1,71 @@
+[
+    {
+        "idGuia": 1,
+        "nome": "Marina Costa",
+        "telefone": "21990000101",
+        "email": "marina.costa@guiasrio.com.br",
+        "especialidade": "Centro Histórico e Santa Teresa",
+        "idiomas": "Português, inglês",
+        "regioes": "Centro, Lapa, Santa Teresa",
+        "cidadeAtuacao": "Rio de Janeiro",
+        "apresentacao": "Historiadora e guia credenciada há 8 anos. Roteiros a pé pelos casarões, igrejas e escadarias do centro antigo.",
+        "valorDiaria": 150.0,
+        "unidadeValor": "meio período",
+        "avaliacao": 4.9,
+        "etiquetas": [
+            "História",
+            "Cultura",
+            "A pé"
+        ],
+        "foto": "fotos/guia1.jpg",
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-11-10 13:30:05"
+    },
+    {
+        "idGuia": 2,
+        "nome": "Paulo Andrade",
+        "telefone": "21990000202",
+        "email": "paulo.andrade@guiasrio.com.br",
+        "especialidade": "Trilhas e mirantes",
+        "idiomas": "Português, espanhol",
+        "regioes": "Tijuca, Pedra Bonita, Dois Irmãos",
+        "cidadeAtuacao": "Rio de Janeiro",
+        "apresentacao": "Guia de ecoturismo. Leva grupos pequenos para trilhas de nível fácil a moderado, com transporte até o início da trilha.",
+        "valorDiaria": 200.0,
+        "unidadeValor": "meio período",
+        "avaliacao": 4.8,
+        "etiquetas": [
+            "Trilhas",
+            "Natureza",
+            "Aventura"
+        ],
+        "foto": "fotos/guia2.jpg",
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-11-10 13:30:05"
+    },
+    {
+        "idGuia": 3,
+        "nome": "Carlos Mendes",
+        "telefone": "21990000303",
+        "email": "carlos.mendes@guiasrio.com.br",
+        "especialidade": "City tour panorâmico",
+        "idiomas": "Português, inglês, espanhol",
+        "regioes": "Centro, Zona Sul e orla",
+        "cidadeAtuacao": "Rio de Janeiro",
+        "apresentacao": "Guia há 15 anos. Conduz city tours em ônibus panorâmico pelos principais cartões-postais do Rio, com histórias e curiosidades em cada parada.",
+        "valorDiaria": 180.0,
+        "unidadeValor": "meio período",
+        "avaliacao": 4.7,
+        "etiquetas": [
+            "City tour",
+            "História",
+            "Pontos turísticos"
+        ],
+        "foto": "fotos/guia3.jpg",
+        "diaFolga": null,
+        "ativo": true,
+        "dataCadastro": "2026-11-10 13:30:05"
+    }
+]

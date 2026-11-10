@@ -2,205 +2,164 @@
 
 namespace Controllers;
 
-use Models\Destino;
+use BD\TabelaJson;
 use Models\GuiaTuristico;
 use Models\ItemRoteiro;
 use Models\Passeio;
+use Models\Roteiro;
 use Utils\Formatador;
 use Utils\Texto;
-use Utils\Validador;
 use Views\Icones;
 use Views\ViewRenderer;
 
-/**
- * RF04: pesquisa de guias turísticos por localidade, e atrações (passeios) do destino.
- */
 class TurismoController extends BuscaController
 {
     private static $pathComponentesTurismo = __DIR__ . '/../Views/turismo/components/';
 
+    private const MODOS = [
+        'guias'    => ['rotulo' => 'Guias locais', 'legenda' => 'guias credenciados da região', 'icone' => 'pessoas', 'cores' => '--mc:#1f8a5b;--ms:#e3f4ec;--mb:#b4e0c9'],
+        'passeios' => ['rotulo' => 'Passeios e atrações', 'legenda' => 'ingressos e passeios', 'icone' => 'ingresso', 'cores' => '--mc:#7046c9;--ms:#efe9fb;--mb:#d3c4f3']
+    ];
+
     public static function getBusca(): string
     {
         $obUsuario = self::exigirAutenticacao();
-        self::carregarRoteiros($obUsuario);
+        $obRoteiro = self::exigirRoteiroContexto($obUsuario);
+        $modo      = self::parametroPermitido('modo', self::MODOS, 'guias');
+        $termo     = trim((string) ($_GET['q'] ?? ''));
+        $datas     = $obRoteiro->getDatasDaViagem();
+        $diaPedido = in_array($_GET['data'] ?? '', $datas, true) ? $_GET['data'] : null;
+        $destino   = self::getNomeDestino($obRoteiro);
 
-        $contexto = self::$roteiroContexto;
-        $filtros  = [
-            'cidade'        => trim($_GET['cidade'] ?? self::getPrimeiraCidadeContexto()),
-            'especialidade' => trim($_GET['especialidade'] ?? ''),
-            'data'          => $_GET['data'] ?? ($contexto ? max($contexto->getDataInicio(), date('Y-m-d')) : ''),
-            'pessoas'       => $_GET['pessoas'] ?? '2'
-        ];
+        [$cards, $componente, $unidade] = $modo === 'guias'
+            ? [self::getCardsGuias($obRoteiro, $termo, $diaPedido ?? $datas[min(1, count($datas) - 1)]), 'card-guia.php', 'guia']
+            : [self::getCardsPasseios($obRoteiro, $termo, $diaPedido ?? $datas[min(2, count($datas) - 1)]), 'card-passeio.php', 'passeio'];
 
-        $buscou = isset($_GET['cidade']) || $contexto;
+        $notaDia = $diaPedido ? ' · adicionando ao dia ' . (array_search($diaPedido, $datas, true) + 1) . ' (' . Formatador::dataCurta($diaPedido) . ')' : '';
 
-        $feedback = '';
-        $guias    = '';
-        $passeios = '';
-        $inicial  = self::getEstadoInicialBusca('Descubra guias e passeios', 'Informe a cidade para ver os guias turísticos cadastrados e as atrações do destino.');
-
-        if($buscou){
-            $erros = self::validarFiltros($filtros);
-
-            if(!empty($erros)){
-                $feedback = self::getAlertaLista('erro', $erros);
-            }else{
-                $guias    = self::getSecao('guias', 'Guias turísticos', 'contatos cadastrados no Mundear', self::getSecaoGuias($filtros));
-                $passeios = self::getSecao('passeios', 'Passeios e atrações', 'ingressos e pontos turísticos do destino', self::getSecaoPasseios($filtros));
-            }
-
-            $inicial = '';
-        }
+        $resultados = empty($cards)
+            ? sprintf(
+                '<div class="cartao flex flex-col items-center gap-2 text-center text-apagado"><b class="text-tinta">Nenhum %s encontrado%s.</b><span>Tente outra palavra ou veja todas as sugestões.</span><a href="/turismo?roteiro=%d&modo=%s" class="btn-secundario !h-9 !text-[13px]">Ver todas as sugestões</a></div>',
+                $unidade,
+                $termo !== '' ? ' para "' . self::e($termo) . '"' : '',
+                $obRoteiro->getIdRoteiro(),
+                $modo
+            )
+            : ViewRenderer::getLista($cards, self::$pathComponentesTurismo, $componente);
 
         return self::renderizarPagina('turismo/busca.php', [
-            'bannerContexto'     => self::getBannerContexto(),
-            'campoContexto'      => self::getCampoRoteiroContexto(),
-            'feedback'           => $feedback,
-            'valorCidade'        => self::e($filtros['cidade']),
-            'valorEspecialidade' => self::e($filtros['especialidade']),
-            'valorData'          => self::e($filtros['data']),
-            'valorPessoas'       => self::e($filtros['pessoas']),
-            'dataMinima'         => date('Y-m-d'),
-            'datalistCidades'    => self::getDatalistCidades(),
-            'estadoInicial'      => $inicial,
-            'guias'              => $guias,
-            'passeios'           => $passeios
-        ], 'turismo', 'Turismo');
+            'abas'        => self::getAbasModo('/turismo?roteiro=' . $obRoteiro->getIdRoteiro() . ($diaPedido ? '&data=' . $diaPedido : ''), self::MODOS, $modo),
+            'idRoteiro'   => $obRoteiro->getIdRoteiro(),
+            'modo'        => $modo,
+            'campoData'   => $diaPedido ? '<input type="hidden" name="data" value="' . $diaPedido . '">' : '',
+            'termo'       => self::e($termo),
+            'dicaBusca'   => $modo === 'guias' ? 'Busque por nome, especialidade, idioma ou bairro. Ex.: trilha, inglês' : 'Busque por passeio, tipo ou bairro. Ex.: mirante, museu, Urca',
+            'iconeBusca'  => Icones::get('busca', 'h-5 w-5 flex-none text-apagado'),
+            'rotulo'      => self::e(($termo !== '' ? 'Resultados em ' : 'Sugestões de ' . $unidade . 's em ') . $destino . $notaDia),
+            'contagem'    => count($cards) . ' ' . $unidade . (count($cards) === 1 ? '' : 's'),
+            'resultados'  => $resultados
+        ], 'turismo', 'Turismo', [
+            'cabecalhoPagina' => self::getCabecalhoPagina($obRoteiro, 'Turismo', 'Encontre guias locais e passeios no destino e monte a programação de cada dia.', self::MODOS[$modo]['icone'], self::MODOS[$modo]['cores']),
+            'barraEtapas'     => self::getBarraEtapas($obRoteiro, 'Turismo')
+        ]);
     }
 
-    private static function validarFiltros(array $filtros): array
+    private static function getIdsNoRoteiro(Roteiro $obRoteiro, string $tipoServico): array
     {
-        $erros = [];
+        $itens = array_filter($obRoteiro->getItens(), fn(ItemRoteiro $obItem) => $obItem->getTipoServico() === $tipoServico);
 
-        if($filtros['cidade'] === '') $erros[] = 'Informe a cidade para pesquisar.';
-
-        if($filtros['data'] !== ''){
-            if(!Validador::data($filtros['data']))      $erros[] = 'Informe uma data válida.';
-            elseif($filtros['data'] < date('Y-m-d'))    $erros[] = 'A data não pode estar no passado.';
-        }
-
-        if(!Validador::inteiroEntre($filtros['pessoas'], 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
-            $erros[] = 'A quantidade de pessoas deve ficar entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.';
-        }
-
-        return $erros;
+        return array_map(fn(ItemRoteiro $obItem) => (string) $obItem->getIdServico(), $itens);
     }
 
-    private static function getSecaoGuias(array $filtros): string
+    private static function getOpcoesDias(Roteiro $obRoteiro, string $dataSelecionada): string
     {
-        $guias = GuiaTuristico::pesquisar($filtros['cidade'], $filtros['especialidade']);
-
-        if(empty($guias)){
-            return self::getEstadoVazio('Nenhum guia encontrado', 'Não há guias ativos para essa localidade' . ($filtros['especialidade'] !== '' ? ' com essa especialidade' : '') . '.');
+        $opcoes = [];
+        foreach($obRoteiro->getDatasDaViagem() as $indice => $data){
+            $opcoes[$data] = 'Dia ' . ($indice + 1) . ' · ' . Formatador::dataCurta($data);
         }
 
-        $temData = $filtros['data'] !== '';
-        $cards   = array_map(function(GuiaTuristico $obGuia) use ($filtros, $temData){
-            $motivo = null;
-            if(!$temData){
-                $motivo = 'Escolha uma data na busca para adicionar';
-            }elseif(!$obGuia->consultarDisponibilidade($filtros['data'])){
-                $motivo = 'Indisponível em ' . Formatador::data($filtros['data']) . ' (folga)';
-            }
+        return self::opcoesSelect($opcoes, $dataSelecionada);
+    }
+
+    private static function getCardsGuias(Roteiro $obRoteiro, string $termo, string $dataPadrao): array
+    {
+        $guias     = GuiaTuristico::pesquisar(self::getPrimeiraCidadeContexto(), $termo);
+        $noRoteiro = self::getIdsNoRoteiro($obRoteiro, ItemRoteiro::TIPO_GUIA);
+        $tabela    = new TabelaJson('guia', 'idGuia');
+
+        $cards = array_map(function(GuiaTuristico $obGuia) use ($obRoteiro, $dataPadrao, $noRoteiro, $tabela){
+            $apresentacao = $tabela->buscarPorId($obGuia->getIdGuia()) ?? [];
+            $jaNoRoteiro  = in_array((string) $obGuia->getIdGuia(), $noRoteiro, true);
+            $unidade      = $apresentacao['unidadeValor'] ?? 'diária';
+            $nota         = isset($apresentacao['avaliacao']) ? str_replace('.', ',', (string) $apresentacao['avaliacao']) : '–';
+            $campos       = ['tipoServico' => ItemRoteiro::TIPO_GUIA, 'idServico' => $obGuia->getIdGuia(), 'pessoas' => $obRoteiro->getQuantidadePessoas()];
+
+            $foto = empty($apresentacao['foto'])
+                ? self::e(Texto::iniciais($obGuia->getNome()))
+                : '<img src="/public/img/' . self::e($apresentacao['foto']) . '" alt="Foto de ' . self::e($obGuia->getNome()) . '. Clique para ampliar" class="block h-full w-full cursor-zoom-in rounded-full object-cover" data-ampliar>';
 
             return [
-                'iniciais'       => self::e(Texto::iniciais($obGuia->getNome())),
-                'nome'           => self::e($obGuia->getNome()),
-                'especialidade'  => self::e($obGuia->getEspecialidade()),
-                'cidade'         => self::e($obGuia->getCidadeAtuacao()),
-                'telefone'       => self::e(Formatador::telefone($obGuia->getTelefone())),
-                'telefoneLink'   => self::e($obGuia->getTelefone()),
-                'folga'          => self::e($obGuia->getDescricaoFolga()),
-                'valorDiaria'    => self::moeda($obGuia->getValorDiaria()),
-                'disponibilidade'=> $temData ? self::getBadgeDisponibilidade($obGuia->consultarDisponibilidade($filtros['data']), $filtros['data']) : '',
-                'iconePin'       => Icones::get('pin', 'h-4 w-4 shrink-0 text-slate-400'),
-                'iconeTelefone'  => Icones::get('telefone', 'h-4 w-4 shrink-0 text-slate-400'),
-                'iconeCalendario'=> Icones::get('calendario', 'h-4 w-4 shrink-0 text-slate-400'),
-                'formAdicionar'  => self::getFormAdicionar([
-                    'tipoServico' => ItemRoteiro::TIPO_GUIA,
-                    'idServico'   => $obGuia->getIdGuia(),
-                    'data'        => $filtros['data'],
-                    'pessoas'     => (int) $filtros['pessoas']
-                ], $motivo)
+                'nota'          => (float) ($apresentacao['avaliacao'] ?? 0),
+                'cores'         => self::MODOS['guias']['cores'],
+                'foto'          => $foto,
+                'nome'          => self::e($obGuia->getNome()),
+                'especialidade' => self::e($obGuia->getEspecialidade()),
+                'avaliacao'     => $nota,
+                'idiomas'       => self::getEtiquetas([$obGuia->getIdiomas()]),
+                'valor'         => self::moeda($obGuia->getValorDiaria()),
+                'unidade'       => self::e($unidade),
+                'idPerfil'      => 'perfil-guia-' . $obGuia->getIdGuia(),
+                'apresentacao'  => self::e($obGuia->getApresentacao()),
+                'regioes'       => self::e($obGuia->getRegioes()),
+                'idiomasTexto'  => self::e($obGuia->getIdiomas()),
+                'contato'       => self::e(Formatador::telefone($obGuia->getTelefone()) . ' (WhatsApp)'),
+                'iconeFechar'   => Icones::get('fechar', 'h-5 w-5'),
+                'botao'         => self::getBotaoAdicionar($obRoteiro, $campos + ['data' => $dataPadrao], $jaNoRoteiro),
+                'formPerfil'    => $jaNoRoteiro
+                    ? '<button class="btn-secundario !cursor-default !border-transparent !bg-ok-suave !text-ok" disabled>No roteiro ✓</button>'
+                    : '<form method="POST" action="/roteiros/itens/adicionar" class="flex flex-col gap-3.5">' . self::getCamposAdicionar($obRoteiro, $campos)
+                        . '<div><label class="rotulo" for="dia-guia-' . $obGuia->getIdGuia() . '">Dia do passeio</label><select id="dia-guia-' . $obGuia->getIdGuia() . '" name="data" class="campo">' . self::getOpcoesDias($obRoteiro, $dataPadrao) . '</select></div>'
+                        . '<button type="submit" class="btn-destaque">' . Icones::get('mais', 'h-[18px] w-[18px]') . 'Adicionar ao roteiro</button></form>'
             ];
         }, $guias);
 
-        return '<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">' . ViewRenderer::getLista($cards, self::$pathComponentesTurismo, 'card-guia.php') . '</div>';
+        if($termo === ''){
+            usort($cards, fn($a, $b) => $b['nota'] <=> $a['nota']);
+        }
+
+        return $cards;
     }
 
-    private static function getSecaoPasseios(array $filtros): string
+    private static function getCardsPasseios(Roteiro $obRoteiro, string $termo, string $dataPadrao): array
     {
-        $passeios = [];
-        foreach(Destino::listar() as $obDestino){
-            if(Texto::contem($obDestino->getCidade(), $filtros['cidade'])){
-                foreach($obDestino->listarAtracoes() as $obPasseio){
-                    $passeios[] = [$obDestino, $obPasseio];
-                }
-            }
-        }
+        $passeios  = Passeio::pesquisar($termo, self::getPrimeiraCidadeContexto());
+        $noRoteiro = self::getIdsNoRoteiro($obRoteiro, ItemRoteiro::TIPO_PASSEIO);
+        $tabela    = new TabelaJson('passeio', 'idPasseio');
+        $pessoas   = $obRoteiro->getQuantidadePessoas();
 
-        if(empty($passeios)){
-            return self::getEstadoVazio('Nenhum passeio encontrado', 'Ainda não temos atrações cadastradas para essa cidade.');
-        }
-
-        $temData = $filtros['data'] !== '';
-        $pessoas = (int) $filtros['pessoas'];
-
-        $cards = array_map(function(array $par) use ($filtros, $temData, $pessoas){
-            /** @var Destino $obDestino */
-            /** @var Passeio $obPasseio */
-            [$obDestino, $obPasseio] = $par;
-
-            $motivo = null;
-            if(!$temData){
-                $motivo = 'Escolha uma data na busca para adicionar';
-            }elseif(!$obPasseio->verificarDisponibilidade($filtros['data'])){
-                $motivo = 'Fechado em ' . Formatador::data($filtros['data']);
-            }
-
-            $gratuito = $obPasseio->getPrecoIngresso() <= 0;
+        return array_map(function(Passeio $obPasseio) use ($obRoteiro, $dataPadrao, $noRoteiro, $tabela, $pessoas){
+            $apresentacao = $tabela->buscarPorId($obPasseio->getIdPasseio()) ?? [];
+            $etiquetas    = empty($apresentacao['nivel'])
+                ? self::getEtiquetas($apresentacao['etiquetas'] ?? [$obPasseio->getCategoria()])
+                : self::getEtiquetas([$apresentacao['nivel'], 'Guia incluso'], [$apresentacao['nivel']]);
 
             return [
-                'nome'            => self::e($obPasseio->getNomeAtracao()),
-                'cidade'          => self::e($obDestino->getCidade() . ' - ' . $obDestino->getEstado()),
-                'localizacao'     => self::e($obPasseio->getLocalizacao()),
-                'duracao'         => Formatador::duracao($obPasseio->getDuracaoMinutos()),
-                'funcionamento'   => self::e($obPasseio->getDescricaoFuncionamento()),
-                'preco'           => $gratuito ? 'Gratuito' : self::moeda($obPasseio->getPrecoIngresso()),
-                'detalhePreco'    => $gratuito ? 'entrada livre' : ($pessoas > 1 ? 'Total p/ ' . $pessoas . ': ' . self::moeda($obPasseio->getPrecoIngresso() * $pessoas) : 'por pessoa'),
-                'disponibilidade' => $temData ? self::getBadgeDisponibilidade($obPasseio->verificarDisponibilidade($filtros['data']), $filtros['data'], 'Aberto', 'Fechado') : '',
-                'iconeIngresso'   => Icones::get('ingresso', 'h-6 w-6'),
-                'iconePin'        => Icones::get('pin', 'h-4 w-4 shrink-0 text-slate-400'),
-                'iconeRelogio'    => Icones::get('relogio', 'h-4 w-4 shrink-0 text-slate-400'),
-                'formAdicionar'   => self::getFormAdicionar([
+                'cores'     => self::MODOS['passeios']['cores'],
+                'galeria'   => self::getGaleria($apresentacao['fotos'] ?? [], $obPasseio->getNomeAtracao()),
+                'nome'      => self::e($obPasseio->getNomeAtracao()),
+                'local'     => self::e($obPasseio->getLocalizacao()),
+                'duracao'   => Formatador::duracao($obPasseio->getDuracaoMinutos()),
+                'etiquetas' => $etiquetas,
+                'total'     => self::moeda($obPasseio->getPrecoIngresso() * $pessoas),
+                'porPessoa' => self::moeda($obPasseio->getPrecoIngresso()) . ' por pessoa · ' . $pessoas . ($pessoas === 1 ? ' pessoa' : ' pessoas'),
+                'iconePin'  => Icones::get('pin', 'h-3.5 w-3.5'),
+                'botao'     => self::getBotaoAdicionar($obRoteiro, [
                     'tipoServico' => ItemRoteiro::TIPO_PASSEIO,
                     'idServico'   => $obPasseio->getIdPasseio(),
-                    'data'        => $filtros['data'],
+                    'data'        => $dataPadrao,
                     'pessoas'     => $pessoas
-                ], $motivo)
+                ], in_array((string) $obPasseio->getIdPasseio(), $noRoteiro, true))
             ];
         }, $passeios);
-
-        return '<div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">' . ViewRenderer::getLista($cards, self::$pathComponentesTurismo, 'card-passeio.php') . '</div>';
-    }
-
-    private static function getSecao(string $id, string $titulo, string $subtitulo, string $conteudo): string
-    {
-        return sprintf(
-            '<section id="%s" class="mt-8 scroll-mt-24"><div class="mb-4 flex flex-wrap items-baseline gap-x-2"><h2 class="text-xl font-bold text-blue-950">%s</h2><span class="text-sm text-slate-500">· %s</span></div>%s</section>',
-            $id,
-            $titulo,
-            $subtitulo,
-            $conteudo
-        );
-    }
-
-    private static function getBadgeDisponibilidade(bool $disponivel, string $data, string $textoSim = 'Disponível', string $textoNao = 'Indisponível'): string
-    {
-        $texto = ($disponivel ? $textoSim : $textoNao) . ' em ' . Formatador::dataCurta($data);
-
-        return $disponivel
-            ? '<span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">' . $texto . '</span>'
-            : '<span class="inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700 ring-1 ring-red-200">' . $texto . '</span>';
     }
 }

@@ -5,10 +5,6 @@ namespace Models;
 use BD\TabelaJson;
 use Utils\Texto;
 
-/**
- * Destino existe de forma independente do roteiro (agregação Roteiro ◇— Destino):
- * os roteiros guardam apenas os ids dos destinos escolhidos.
- */
 class Destino
 {
     private int $idDestino;
@@ -34,17 +30,11 @@ class Destino
         return $this->cidade . ' - ' . $this->estado . ', ' . $this->pais;
     }
 
-    /**
-     * @return Passeio[]
-     */
     public function listarAtracoes(): array
     {
         return Passeio::listarPorDestino($this->idDestino);
     }
 
-    /**
-     * @return Destino[]
-     */
     public static function listar(): array
     {
         $destinos = array_map(fn($registro) => self::criar($registro), self::getTabela()->listar());
@@ -59,9 +49,6 @@ class Destino
         return $registro ? self::criar($registro) : null;
     }
 
-    /**
-     * @return Destino[]
-     */
     public static function getPorIds(array $idsDestino): array
     {
         return array_values(array_filter(array_map(fn($id) => self::getPorId((int) $id), $idsDestino)));

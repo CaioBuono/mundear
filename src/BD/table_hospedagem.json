@@ -1,41 +1,521 @@
 [
-    { "idHospedagem": 1, "nomeLocal": "Hotel Mirante da Orla", "tipo": "Hotel", "cidade": "Rio de Janeiro", "endereco": "Av. Atlântica, 1200 - Copacabana", "precoDiaria": 520.00, "avaliacao": 4.6 },
-    { "idHospedagem": 2, "nomeLocal": "Pousada Santa Teresa", "tipo": "Pousada", "cidade": "Rio de Janeiro", "endereco": "Rua Almirante Alexandrino, 340 - Santa Teresa", "precoDiaria": 310.00, "avaliacao": 4.4 },
-    { "idHospedagem": 3, "nomeLocal": "Hostel Carioca Raiz", "tipo": "Hostel", "cidade": "Rio de Janeiro", "endereco": "Rua Barata Ribeiro, 88 - Copacabana", "precoDiaria": 95.00, "avaliacao": 4.1 },
-
-    { "idHospedagem": 4, "nomeLocal": "Hotel Paulista Center", "tipo": "Hotel", "cidade": "São Paulo", "endereco": "Av. Paulista, 1500 - Bela Vista", "precoDiaria": 430.00, "avaliacao": 4.5 },
-    { "idHospedagem": 5, "nomeLocal": "Vila Madalena Studios", "tipo": "Pousada", "cidade": "São Paulo", "endereco": "Rua Aspicuelta, 210 - Vila Madalena", "precoDiaria": 280.00, "avaliacao": 4.3 },
-    { "idHospedagem": 6, "nomeLocal": "Hostel Liberdade", "tipo": "Hostel", "cidade": "São Paulo", "endereco": "Rua Galvão Bueno, 45 - Liberdade", "precoDiaria": 85.00, "avaliacao": 4.0 },
-
-    { "idHospedagem": 7, "nomeLocal": "Hotel Farol da Barra", "tipo": "Hotel", "cidade": "Salvador", "endereco": "Av. Oceânica, 300 - Barra", "precoDiaria": 410.00, "avaliacao": 4.5 },
-    { "idHospedagem": 8, "nomeLocal": "Pousada Pelourinho Colonial", "tipo": "Pousada", "cidade": "Salvador", "endereco": "Rua do Carmo, 12 - Pelourinho", "precoDiaria": 260.00, "avaliacao": 4.7 },
-    { "idHospedagem": 9, "nomeLocal": "Hostel Rio Vermelho", "tipo": "Hostel", "cidade": "Salvador", "endereco": "Rua da Paciência, 77 - Rio Vermelho", "precoDiaria": 80.00, "avaliacao": 4.2 },
-
-    { "idHospedagem": 10, "nomeLocal": "Resort Praia Mole", "tipo": "Hotel", "cidade": "Florianópolis", "endereco": "Rod. Jorn. Manoel de Menezes, 2001 - Praia Mole", "precoDiaria": 690.00, "avaliacao": 4.8 },
-    { "idHospedagem": 11, "nomeLocal": "Pousada Lagoa da Conceição", "tipo": "Pousada", "cidade": "Florianópolis", "endereco": "Rua Henrique Veras, 500 - Lagoa", "precoDiaria": 330.00, "avaliacao": 4.6 },
-    { "idHospedagem": 12, "nomeLocal": "Hostel Ilha da Magia", "tipo": "Hostel", "cidade": "Florianópolis", "endereco": "Rua Bocaiúva, 150 - Centro", "precoDiaria": 90.00, "avaliacao": 4.3 },
-
-    { "idHospedagem": 13, "nomeLocal": "Hotel Cataratas Park", "tipo": "Hotel", "cidade": "Foz do Iguaçu", "endereco": "Rod. das Cataratas, km 12", "precoDiaria": 480.00, "avaliacao": 4.7 },
-    { "idHospedagem": 14, "nomeLocal": "Pousada Três Fronteiras", "tipo": "Pousada", "cidade": "Foz do Iguaçu", "endereco": "Av. General Meira, 900", "precoDiaria": 220.00, "avaliacao": 4.4 },
-    { "idHospedagem": 15, "nomeLocal": "Hostel Trilha Verde", "tipo": "Hostel", "cidade": "Foz do Iguaçu", "endereco": "Rua Tarobá, 1020 - Centro", "precoDiaria": 75.00, "avaliacao": 4.1 },
-
-    { "idHospedagem": 16, "nomeLocal": "Hotel Bosque Encantado", "tipo": "Hotel", "cidade": "Gramado", "endereco": "Av. Borges de Medeiros, 2500", "precoDiaria": 610.00, "avaliacao": 4.8 },
-    { "idHospedagem": 17, "nomeLocal": "Pousada Vale das Hortênsias", "tipo": "Pousada", "cidade": "Gramado", "endereco": "Rua Garibaldi, 330", "precoDiaria": 390.00, "avaliacao": 4.6 },
-    { "idHospedagem": 18, "nomeLocal": "Hostel Serra Gaúcha", "tipo": "Hostel", "cidade": "Gramado", "endereco": "Rua São Pedro, 75", "precoDiaria": 120.00, "avaliacao": 4.2 },
-
-    { "idHospedagem": 19, "nomeLocal": "Hotel Boa Viagem Mar", "tipo": "Hotel", "cidade": "Recife", "endereco": "Av. Boa Viagem, 4000 - Boa Viagem", "precoDiaria": 380.00, "avaliacao": 4.4 },
-    { "idHospedagem": 20, "nomeLocal": "Pousada Recife Antigo", "tipo": "Pousada", "cidade": "Recife", "endereco": "Rua do Bom Jesus, 180 - Recife Antigo", "precoDiaria": 240.00, "avaliacao": 4.3 },
-    { "idHospedagem": 21, "nomeLocal": "Hostel Capibaribe", "tipo": "Hostel", "cidade": "Recife", "endereco": "Rua da Aurora, 520 - Boa Vista", "precoDiaria": 70.00, "avaliacao": 4.0 },
-
-    { "idHospedagem": 22, "nomeLocal": "Hotel Savassi Prime", "tipo": "Hotel", "cidade": "Belo Horizonte", "endereco": "Rua Pernambuco, 1100 - Savassi", "precoDiaria": 350.00, "avaliacao": 4.5 },
-    { "idHospedagem": 23, "nomeLocal": "Pousada Pampulha", "tipo": "Pousada", "cidade": "Belo Horizonte", "endereco": "Av. Otacílio Negrão de Lima, 600", "precoDiaria": 210.00, "avaliacao": 4.2 },
-    { "idHospedagem": 24, "nomeLocal": "Hostel Mineiro", "tipo": "Hostel", "cidade": "Belo Horizonte", "endereco": "Rua Gonçalves Dias, 90 - Funcionários", "precoDiaria": 65.00, "avaliacao": 4.1 },
-
-    { "idHospedagem": 25, "nomeLocal": "Hotel Beira-Mar Iracema", "tipo": "Hotel", "cidade": "Fortaleza", "endereco": "Av. Beira Mar, 2200 - Meireles", "precoDiaria": 400.00, "avaliacao": 4.5 },
-    { "idHospedagem": 26, "nomeLocal": "Pousada Praia do Futuro", "tipo": "Pousada", "cidade": "Fortaleza", "endereco": "Av. Zezé Diogo, 3500 - Praia do Futuro", "precoDiaria": 250.00, "avaliacao": 4.3 },
-    { "idHospedagem": 27, "nomeLocal": "Hostel Dragão do Mar", "tipo": "Hostel", "cidade": "Fortaleza", "endereco": "Rua Dragão do Mar, 60 - Praia de Iracema", "precoDiaria": 75.00, "avaliacao": 4.1 },
-
-    { "idHospedagem": 28, "nomeLocal": "Hotel Encontro das Águas", "tipo": "Hotel", "cidade": "Manaus", "endereco": "Av. Eduardo Ribeiro, 800 - Centro", "precoDiaria": 370.00, "avaliacao": 4.4 },
-    { "idHospedagem": 29, "nomeLocal": "Lodge Floresta Viva", "tipo": "Pousada", "cidade": "Manaus", "endereco": "Estrada do Turismo, km 8 - Ponta Negra", "precoDiaria": 560.00, "avaliacao": 4.7 },
-    { "idHospedagem": 30, "nomeLocal": "Hostel Amazonas", "tipo": "Hostel", "cidade": "Manaus", "endereco": "Rua 10 de Julho, 200 - Centro", "precoDiaria": 70.00, "avaliacao": 4.0 }
+    {
+        "idHospedagem": 1,
+        "nomeLocal": "Arosa Rio Hotel",
+        "tipo": "Hotel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Lapa, Centro",
+        "precoDiaria": 319.9,
+        "avaliacao": 4.3,
+        "quarto": "Quarto duplo",
+        "comodidades": [
+            "Piscina na cobertura",
+            "Bar",
+            "Café da manhã",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/arosa1.jpg",
+            "fotos/arosa2.jpg",
+            "fotos/arosa3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 319.9,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Expedia",
+                "precoDiaria": 329.9,
+                "linkReserva": "https://www.expedia.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Decolar",
+                "precoDiaria": 334,
+                "linkReserva": "https://www.decolar.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 4,
+                "nomeSite": "Hotéis.com",
+                "precoDiaria": 341.5,
+                "linkReserva": "https://www.hoteis.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 5,
+                "nomeSite": "Site do hotel",
+                "precoDiaria": 359,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 2,
+        "nomeLocal": "Hilton Rio de Janeiro Copacabana",
+        "tipo": "Hotel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Leme, em frente à praia",
+        "precoDiaria": 1089,
+        "avaliacao": 4.6,
+        "quarto": "Quarto duplo · vista para o mar",
+        "comodidades": [
+            "Piscina",
+            "Beira-mar",
+            "Bar com vista",
+            "Academia",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/hilton1.jpg",
+            "fotos/hilton2.jpg",
+            "fotos/hilton3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 1089,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Decolar",
+                "precoDiaria": 1115,
+                "linkReserva": "https://www.decolar.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Site do hotel",
+                "precoDiaria": 1129,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 4,
+                "nomeSite": "Expedia",
+                "precoDiaria": 1140,
+                "linkReserva": "https://www.expedia.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 5,
+                "nomeSite": "Hotéis.com",
+                "precoDiaria": 1158,
+                "linkReserva": "https://www.hoteis.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 3,
+        "nomeLocal": "Copacabana Palace",
+        "tipo": "Hotel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Praia de Copacabana",
+        "precoDiaria": 3290,
+        "avaliacao": 4.9,
+        "quarto": "Quarto duplo · vista para o mar",
+        "comodidades": [
+            "Piscina",
+            "Beira-mar",
+            "Café da manhã",
+            "Spa",
+            "Restaurante"
+        ],
+        "fotos": [
+            "fotos/copa1.jpg",
+            "fotos/copa2.jpg",
+            "fotos/copa3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Site do hotel",
+                "precoDiaria": 3290,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 3415,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Expedia",
+                "precoDiaria": 3460,
+                "linkReserva": "https://www.expedia.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 4,
+                "nomeSite": "Decolar",
+                "precoDiaria": 3520,
+                "linkReserva": "https://www.decolar.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 5,
+                "nomeSite": "Hotéis.com",
+                "precoDiaria": 3545,
+                "linkReserva": "https://www.hoteis.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 4,
+        "nomeLocal": "JO&JOE Rio de Janeiro",
+        "tipo": "Hostel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Largo do Boticário, Cosme Velho",
+        "precoDiaria": 172,
+        "avaliacao": 4.7,
+        "quarto": "2 camas em quarto compartilhado",
+        "comodidades": [
+            "Quarto compartilhado",
+            "Piscina",
+            "Bar",
+            "Café da manhã",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/jojoe1.jpg",
+            "fotos/jojoe2.jpg",
+            "fotos/jojoe3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Site do hostel",
+                "precoDiaria": 172,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 179.8,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Hostelworld",
+                "precoDiaria": 184,
+                "linkReserva": "https://www.hostelworld.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 5,
+        "nomeLocal": "Ipanema Beach Hostel",
+        "tipo": "Hostel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Ipanema",
+        "precoDiaria": 139.8,
+        "avaliacao": 4.5,
+        "quarto": "2 camas em quarto compartilhado",
+        "comodidades": [
+            "Quarto compartilhado",
+            "Piscina",
+            "Bar",
+            "Perto da praia",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/ipanema1.jpg",
+            "fotos/ipanema2.jpg",
+            "fotos/ipanema3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Hostelworld",
+                "precoDiaria": 139.8,
+                "linkReserva": "https://www.hostelworld.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Site do hostel",
+                "precoDiaria": 145,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 149.8,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 6,
+        "nomeLocal": "Che Lagarto Hostel Ipanema",
+        "tipo": "Hostel",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Ipanema",
+        "precoDiaria": 129.8,
+        "avaliacao": 4.4,
+        "quarto": "2 camas em quarto compartilhado",
+        "comodidades": [
+            "Quarto compartilhado",
+            "Hidromassagem",
+            "Bar",
+            "Ar-condicionado",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/che1.jpg",
+            "fotos/che2.jpg",
+            "fotos/che3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 129.8,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Site do hostel",
+                "precoDiaria": 132,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Hostelworld",
+                "precoDiaria": 134,
+                "linkReserva": "https://www.hostelworld.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 7,
+        "nomeLocal": "Sheraton Grand Rio Hotel & Resort",
+        "tipo": "Hotel fazenda",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Av. Niemeyer, Leblon",
+        "precoDiaria": 1390,
+        "avaliacao": 4.6,
+        "quarto": "Quarto duplo · vista para o mar",
+        "comodidades": [
+            "Resort",
+            "Beira-mar",
+            "Piscina",
+            "Spa",
+            "Quadras de tênis"
+        ],
+        "fotos": [
+            "fotos/sheraton1.jpg",
+            "fotos/sheraton2.jpg",
+            "fotos/sheraton3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 1390,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Site do hotel",
+                "precoDiaria": 1420,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Decolar",
+                "precoDiaria": 1455,
+                "linkReserva": "https://www.decolar.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 4,
+                "nomeSite": "Expedia",
+                "precoDiaria": 1470,
+                "linkReserva": "https://www.expedia.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 8,
+        "nomeLocal": "Casanova Residence",
+        "tipo": "Hotel fazenda",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Ilha da Gigóia, Barra da Tijuca",
+        "precoDiaria": 520,
+        "avaliacao": 4.8,
+        "quarto": "Suíte para casal",
+        "comodidades": [
+            "Resort",
+            "Piscina",
+            "Vista para a lagoa",
+            "Deck com rede",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/casanova1.jpg",
+            "fotos/casanova2.jpg",
+            "fotos/casanova3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 520,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Site do hotel",
+                "precoDiaria": 535,
+                "linkReserva": "https://www.google.com/travel/hotels",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 3,
+                "nomeSite": "Airbnb",
+                "precoDiaria": 549,
+                "linkReserva": "https://www.airbnb.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 9,
+        "nomeLocal": "Apartamento brisa do mar",
+        "tipo": "Apartamento",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Barra da Tijuca, perto do Joá",
+        "precoDiaria": 550,
+        "avaliacao": 5,
+        "quarto": "Apartamento inteiro · até 4 pessoas · 1 quarto · 2 camas",
+        "comodidades": [
+            "Preferido dos hóspedes",
+            "Varanda vista mar",
+            "Cozinha",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/apto1.jpg",
+            "fotos/apto2.jpg",
+            "fotos/apto3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Airbnb",
+                "precoDiaria": 550,
+                "linkReserva": "https://www.airbnb.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 579,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 10,
+        "nomeLocal": "Paraíso na praia do Pepê",
+        "tipo": "Apartamento",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Barra da Tijuca",
+        "precoDiaria": 520,
+        "avaliacao": 5,
+        "quarto": "Apartamento inteiro · 63 m² · até 4 pessoas · 1 cama queen e 1 sofá-cama",
+        "comodidades": [
+            "Preferido dos hóspedes",
+            "Piscina no prédio",
+            "Varanda com vista",
+            "Wi-Fi"
+        ],
+        "fotos": [
+            "fotos/aptob1.jpg",
+            "fotos/aptob2.jpg",
+            "fotos/aptob3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Airbnb",
+                "precoDiaria": 520,
+                "linkReserva": "https://www.airbnb.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 545,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    },
+    {
+        "idHospedagem": 11,
+        "nomeLocal": "Pousada Ilha Bella",
+        "tipo": "Pousada",
+        "cidade": "Rio de Janeiro",
+        "endereco": "Barra de Guaratiba, Rio de Janeiro",
+        "precoDiaria": 227,
+        "avaliacao": 4.83,
+        "quarto": "Suíte para casal · 1 cama · 1 banheiro",
+        "comodidades": [
+            "Café da manhã incluso",
+            "Piscina de frente para o mar",
+            "Churrasqueira",
+            "Varanda"
+        ],
+        "fotos": [
+            "fotos/aptoc1.jpg",
+            "fotos/aptoc2.jpg",
+            "fotos/aptoc3.jpg"
+        ],
+        "ofertas": [
+            {
+                "idOferta": 1,
+                "nomeSite": "Airbnb",
+                "precoDiaria": 227,
+                "linkReserva": "https://www.airbnb.com.br",
+                "dataConsulta": "2026-11-10 13:30:05"
+            },
+            {
+                "idOferta": 2,
+                "nomeSite": "Booking.com",
+                "precoDiaria": 239,
+                "linkReserva": "https://www.booking.com",
+                "dataConsulta": "2026-11-10 13:30:05"
+            }
+        ]
+    }
 ]

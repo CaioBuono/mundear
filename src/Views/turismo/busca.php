@@ -1,40 +1,24 @@
-{{bannerContexto}}
-
-<div class="mb-6">
-    <h1 class="text-2xl font-bold text-blue-950 sm:text-3xl">Turismo</h1>
-    <p class="mt-1 text-slate-500">Guias turísticos locais e passeios para os dias livres da sua viagem.</p>
-</div>
-
-<form method="GET" action="/turismo" class="cartao">
-    {{campoContexto}}
-
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-[1fr_1fr_170px_120px_auto] lg:items-end">
-        <div>
-            <label for="cidade" class="rotulo">Cidade</label>
-            <input id="cidade" name="cidade" type="text" list="listaCidades" value="{{valorCidade}}" placeholder="Ex.: Salvador" class="campo" required>
-        </div>
-        <div>
-            <label for="especialidade" class="rotulo">Especialidade <span class="font-normal text-slate-400">(opcional)</span></label>
-            <input id="especialidade" name="especialidade" type="text" value="{{valorEspecialidade}}" placeholder="Ex.: gastronomia, trilhas" class="campo">
-        </div>
-        <div>
-            <label for="data" class="rotulo">Data</label>
-            <input id="data" name="data" type="date" value="{{valorData}}" min="{{dataMinima}}" class="campo">
-        </div>
-        <div>
-            <label for="pessoas" class="rotulo">Pessoas</label>
-            <input id="pessoas" name="pessoas" type="number" min="1" max="20" value="{{valorPessoas}}" class="campo" required>
-        </div>
-        <button type="submit" class="btn-primario w-full">Buscar</button>
+<div class="flex flex-col gap-[22px]">
+    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2" role="group" aria-label="Tipo de atividade">
+        {{abas}}
     </div>
 
-    <datalist id="listaCidades">{{datalistCidades}}</datalist>
-</form>
+    <form method="GET" action="/turismo" class="flex h-12 items-center gap-2.5 rounded-xl border border-linha bg-white px-3.5 shadow-cartao focus-within:border-navy focus-within:ring-3 focus-within:ring-suave">
+        <input type="hidden" name="roteiro" value="{{idRoteiro}}">
+        <input type="hidden" name="modo" value="{{modo}}">
+        {{campoData}}
+        {{iconeBusca}}
+        <label for="busca-turismo" class="sr-only">Buscar</label>
+        <input id="busca-turismo" name="q" type="search" value="{{termo}}" placeholder="{{dicaBusca}}" autocomplete="off" class="h-full w-full min-w-0 border-0 bg-transparent outline-none placeholder:text-apagado/70">
+        <button type="submit" class="btn-primario !h-9 !px-3 !text-[13px]">Buscar</button>
+    </form>
 
-<div class="mt-6 empty:hidden">{{feedback}}</div>
+    <div class="flex flex-wrap items-center gap-[18px] text-[13.5px]">
+        <span class="text-[11.5px] font-bold uppercase tracking-[.07em] text-apagado">{{rotulo}}</span>
+        <span class="ml-auto text-apagado">{{contagem}}</span>
+    </div>
 
-<div class="mt-6 empty:hidden">{{estadoInicial}}</div>
-
-{{guias}}
-
-{{passeios}}
+    <div class="flex flex-col gap-3">
+        {{resultados}}
+    </div>
+</div>

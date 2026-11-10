@@ -2,13 +2,10 @@
 
 namespace Models;
 
-use Exceptions\RegraNegocioException;
+use Exceptions\OperacaoNaoPermitidaException;
+use Exceptions\RegistroNaoEncontradoException;
 use Utils\Formatador;
 
-/**
- * Especialização de Usuario (Usuario <|-- Administrador) com permissões
- * para gerenciar guias turísticos, usuários e visualizar relatórios (RF10).
- */
 class Administrador extends Usuario
 {
     private ?string $codigoCredencial = null;
@@ -23,9 +20,10 @@ class Administrador extends Usuario
         return true;
     }
 
-    // ------------------------------------------------------------------
-    // Guias turísticos
-    // ------------------------------------------------------------------
+    public function obterTelaInicial(): string
+    {
+        return '/admin';
+    }
 
     public function cadastrarNovoGuia(GuiaTuristico $guia): bool
     {
@@ -58,37 +56,33 @@ class Administrador extends Usuario
         return $obGuia->salvar();
     }
 
-    /**
-     * A exclusão definitiva só é permitida para guias que não estão em
-     * nenhum roteiro; para os demais, o caminho é a inativação.
-     */
     public function excluirGuia(int $idGuia): bool
     {
         $obGuia = GuiaTuristico::getPorId($idGuia);
         if(!$obGuia instanceof GuiaTuristico){
-            return false;
+            throw new RegistroNaoEncontradoException('Guia não encontrado.');
+        }
+
+        if($obGuia->isAtivo()){
+            throw new OperacaoNaoPermitidaException('Inative ' . $obGuia->getNome() . ' antes de excluir.', 'RN14');
         }
 
         $quantidadeRoteiros = Roteiro::contarRoteirosComGuia($idGuia);
         if($quantidadeRoteiros > 0){
-            throw new RegraNegocioException(sprintf(
+            throw new OperacaoNaoPermitidaException(sprintf(
                 '%s está em %d roteiro(s) e não pode ser excluído(a). Use a opção "Inativar".',
                 $obGuia->getNome(),
                 $quantidadeRoteiros
-            ));
+            ), 'RN14');
         }
 
         return $obGuia->excluir();
     }
 
-    // ------------------------------------------------------------------
-    // Usuários (RN08)
-    // ------------------------------------------------------------------
-
     public function alterarStatusUsuario(int $idUsuario, bool $ativo): bool
     {
         if($idUsuario === $this->getIdUsuario()){
-            throw new RegraNegocioException('Você não pode inativar a sua própria conta.');
+            throw new OperacaoNaoPermitidaException('Você não pode inativar a sua própria conta.', 'RN13');
         }
 
         $obUsuario = Usuario::getUsuarioPorId($idUsuario);
@@ -100,13 +94,6 @@ class Administrador extends Usuario
         return true;
     }
 
-    // ------------------------------------------------------------------
-    // Relatórios
-    // ------------------------------------------------------------------
-
-    /**
-     * Indicadores do sistema usados no painel administrativo.
-     */
     public function obterDadosRelatorio(): array
     {
         $usuarios  = Usuario::listar();
@@ -141,9 +128,6 @@ class Administrador extends Usuario
         ];
     }
 
-    /**
-     * Resumo textual do relatório (método previsto no diagrama de classes).
-     */
     public function gerarRelatorio(): string
     {
         $dados = $this->obterDadosRelatorio();

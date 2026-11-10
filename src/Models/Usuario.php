@@ -3,7 +3,7 @@
 namespace Models;
 
 use BD\TabelaJson;
-use Exceptions\RegraNegocioException;
+use Exceptions\DadosInvalidosException;
 use Services\EmailSimulado;
 
 class Usuario
@@ -11,7 +11,7 @@ class Usuario
     const PERFIL_VIAJANTE      = 'viajante';
     const PERFIL_ADMINISTRADOR = 'administrador';
 
-    const TAMANHO_MINIMO_SENHA = 6;
+    const TAMANHO_MINIMO_SENHA = 8;
 
     protected $idUsuario = null;
 
@@ -26,6 +26,8 @@ class Usuario
     protected $perfil = self::PERFIL_VIAJANTE;
 
     protected $ativo = true;
+
+    protected $receberEmails = true;
 
     protected static function getTabela(): TabelaJson
     {
@@ -62,19 +64,25 @@ class Usuario
         return (bool) $this->ativo;
     }
 
+    public function isReceberEmails(): bool
+    {
+        return (bool) $this->receberEmails;
+    }
+
     public function isAdministrador(): bool
     {
         return false;
+    }
+
+    public function obterTelaInicial(): string
+    {
+        return '/home';
     }
 
     private function getSenha()
     {
         return $this->senha;
     }
-
-    // ------------------------------------------------------------------
-    // Cadastro e autenticação (RF01, RNF03)
-    // ------------------------------------------------------------------
 
     public function cadastrar(array $dadosUsuario): bool
     {
@@ -84,6 +92,7 @@ class Usuario
         $this->dataCadastro = (new \DateTime())->format('Y-m-d H:i:s');
         $this->perfil       = self::PERFIL_VIAJANTE;
         $this->ativo        = true;
+        $this->receberEmails = !empty($dadosUsuario['receberEmails']);
 
         $this->idUsuario = self::getTabela()->inserir($this->toArray());
 
@@ -108,38 +117,32 @@ class Usuario
         return strlen((string) $this->getSenha()) > 0 && password_verify($senha, $this->getSenha());
     }
 
-    /**
-     * RNF03: senha sempre armazenada como hash (Argon2id quando disponível).
-     */
     private static function gerarHash(string $senha): string
     {
         return password_hash($senha, defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT);
     }
 
-    // ------------------------------------------------------------------
-    // Gerenciamento de perfil
-    // ------------------------------------------------------------------
-
-    public function atualizarDados(string $nome, string $email): void
+    public function atualizarDados(string $nome, string $email, bool $receberEmails): void
     {
         $nome  = trim($nome);
         $email = strtolower(trim($email));
 
         $obExistente = self::getUsuario($email);
         if($obExistente instanceof Usuario and $obExistente->getIdUsuario() !== $this->idUsuario){
-            throw new RegraNegocioException('Já existe outro usuário cadastrado com esse e-mail.');
+            throw new DadosInvalidosException('Já existe outro usuário cadastrado com esse e-mail.', 'RN06');
         }
 
-        $this->nome  = $nome;
-        $this->email = $email;
+        $this->nome          = $nome;
+        $this->email         = $email;
+        $this->receberEmails = $receberEmails;
 
-        self::getTabela()->atualizar($this->idUsuario, ['nome' => $nome, 'email' => $email]);
+        self::getTabela()->atualizar($this->idUsuario, ['nome' => $nome, 'email' => $email, 'receberEmails' => $receberEmails]);
     }
 
     public function alterarSenha(string $senhaAtual, string $novaSenha): void
     {
         if(!$this->validarSenha($senhaAtual)){
-            throw new RegraNegocioException('A senha atual informada está incorreta.');
+            throw new DadosInvalidosException('A senha atual informada está incorreta.', 'RN06');
         }
 
         $this->definirNovaSenha($novaSenha);
@@ -156,10 +159,6 @@ class Usuario
         ]);
     }
 
-    /**
-     * Inicia a recuperação de senha: gera um token temporário (1 hora) e
-     * "envia" o link por e-mail (simulado em src/BD/table_email.json).
-     */
     public static function recuperarSenha(string $email): bool
     {
         $obUsuario = self::getUsuario($email);
@@ -211,19 +210,11 @@ class Usuario
         return true;
     }
 
-    // ------------------------------------------------------------------
-    // Ativação / inativação (RN08)
-    // ------------------------------------------------------------------
-
     public function alterarStatus(bool $ativo): void
     {
         $this->ativo = $ativo;
         self::getTabela()->atualizar($this->idUsuario, ['ativo' => $ativo]);
     }
-
-    // ------------------------------------------------------------------
-    // Consultas
-    // ------------------------------------------------------------------
 
     public static function getUsuario(string $email): Usuario|null
     {
@@ -241,18 +232,11 @@ class Usuario
         return $registro ? self::criarAPartirDoRegistro($registro) : null;
     }
 
-    /**
-     * @return Usuario[]
-     */
     public static function listar(): array
     {
         return array_map(fn($registro) => self::criarAPartirDoRegistro($registro), self::getTabela()->listar());
     }
 
-    /**
-     * Fábrica: devolve um Administrador quando o perfil do registro for
-     * administrativo (Administrador é uma especialização de Usuario).
-     */
     protected static function criarAPartirDoRegistro(array $registro): Usuario
     {
         $obUsuario = ($registro['perfil'] ?? '') === self::PERFIL_ADMINISTRADOR ? new Administrador() : new Usuario();
@@ -270,6 +254,7 @@ class Usuario
         $this->dataCadastro = $registro['dataCadastro'] ?? null;
         $this->perfil       = $registro['perfil'] ?? self::PERFIL_VIAJANTE;
         $this->ativo        = $registro['ativo'] ?? true;
+        $this->receberEmails = $registro['receberEmails'] ?? true;
     }
 
     protected function toArray(): array
@@ -281,7 +266,8 @@ class Usuario
             'senha'        => $this->senha,
             'dataCadastro' => $this->dataCadastro,
             'perfil'       => $this->perfil,
-            'ativo'        => $this->ativo
+            'ativo'        => $this->ativo,
+            'receberEmails' => $this->receberEmails
         ];
     }
 }

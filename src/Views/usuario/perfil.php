@@ -4,7 +4,6 @@
 </div>
 
 <div class="grid gap-6 lg:grid-cols-[320px_1fr]">
-    <!-- RESUMO -->
     <aside class="cartao h-fit">
         <div class="flex items-center gap-4">
             <div class="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-950">
@@ -34,7 +33,6 @@
     </aside>
 
     <div class="space-y-6">
-        <!-- DADOS -->
         <form method="POST" action="/perfil" class="cartao space-y-5">
             {{csrf}}
             <div>
@@ -58,7 +56,6 @@
             </div>
         </form>
 
-        <!-- SENHA -->
         <form method="POST" action="/perfil/senha" class="cartao space-y-5">
             {{csrf}}
             <div>

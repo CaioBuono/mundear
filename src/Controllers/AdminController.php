@@ -3,6 +3,7 @@
 namespace Controllers;
 
 use Exceptions\RegraNegocioException;
+use Exceptions\RegistroNaoEncontradoException;
 use Models\Destino;
 use Models\GuiaTuristico;
 use Models\ItemRoteiro;
@@ -12,18 +13,11 @@ use Utils\Formatador;
 use Utils\Texto;
 use Views\ViewRenderer;
 
-/**
- * Área do Administrador: relatórios, CRUD de guias (RF10) e status de usuários (RN08).
- */
 class AdminController extends Controller
 {
     private static $pathComponentesAdmin = __DIR__ . '/../Views/admin/components/';
 
     private const STATUS_FILTRO = ['' => 'Todos', 'ativos' => 'Somente ativos', 'inativos' => 'Somente inativos'];
-
-    // ------------------------------------------------------------------
-    // Relatório
-    // ------------------------------------------------------------------
 
     public static function getRelatorio(): string
     {
@@ -64,10 +58,6 @@ class AdminController extends Controller
             'resumo'              => self::e($obAdmin->gerarRelatorio())
         ], 'admin', 'Administração');
     }
-
-    // ------------------------------------------------------------------
-    // Guias turísticos (RF10)
-    // ------------------------------------------------------------------
 
     public static function getGuias(): string
     {
@@ -239,10 +229,6 @@ class AdminController extends Controller
         return $obGuia;
     }
 
-    // ------------------------------------------------------------------
-    // Usuários (RN08)
-    // ------------------------------------------------------------------
-
     public static function getUsuarios(): string
     {
         $obAdmin = self::exigirAdministrador();
@@ -284,7 +270,7 @@ class AdminController extends Controller
 
         try{
             if(!$obAdmin->alterarStatusUsuario((int) ($_POST['idUsuario'] ?? 0), $ativo)){
-                throw new RegraNegocioException('Usuário não encontrado.');
+                throw new RegistroNaoEncontradoException('Usuário não encontrado.');
             }
 
             Session::setFlash('sucesso', $ativo ? 'Usuário reativado.' : 'Usuário inativado: ele não consegue mais entrar nem acessar seus roteiros.');
@@ -294,8 +280,6 @@ class AdminController extends Controller
 
         self::redirecionar('/admin/usuarios');
     }
-
-    // ------------------------------------------------------------------
 
     private static function getAbas(string $abaAtiva): string
     {

@@ -3,155 +3,150 @@
 namespace Controllers;
 
 use Models\ItemRoteiro;
+use Models\Roteiro;
 use Models\Transporte;
+use Models\VeiculoPessoal;
+use Services\ApiTransporteSimulada;
 use Utils\Formatador;
-use Utils\Texto;
-use Utils\Validador;
 use Views\Icones;
 use Views\ViewRenderer;
 
-/**
- * RF02: busca de voos e ônibus com filtros de data, origem e destino.
- */
 class TransporteController extends BuscaController
 {
     private static $pathComponentesTransporte = __DIR__ . '/../Views/transporte/components/';
 
-    private const TIPOS  = ['todos' => 'Voos e ônibus', 'voo' => 'Somente voos', 'onibus' => 'Somente ônibus'];
-    private const ORDENS = ['horario' => 'Horário de partida', 'preco' => 'Menor preço', 'duracao' => 'Menor duração'];
+    private const PRECO_MAXIMO_FILTRO = 1000;
+
+    private const MODOS = [
+        'aviao'   => ['rotulo' => 'Avião', 'legenda' => 'passagens aéreas', 'tipo' => ApiTransporteSimulada::TIPO_VOO, 'icone' => 'aviao', 'cores' => '--mc:#2563c9;--ms:#e8f0fd;--mb:#bcd2f6'],
+        'onibus'  => ['rotulo' => 'Ônibus', 'legenda' => 'passagens rodoviárias', 'tipo' => ApiTransporteSimulada::TIPO_ONIBUS, 'icone' => 'onibus', 'cores' => '--mc:#d9580f;--ms:#fdeee4;--mb:#f6caa9'],
+        'carona'  => ['rotulo' => 'Carona', 'legenda' => 'via BlaBlaCar', 'tipo' => ApiTransporteSimulada::TIPO_CARONA, 'icone' => 'pessoas', 'cores' => '--mc:#1f8a5b;--ms:#e3f4ec;--mb:#b4e0c9'],
+        'veiculo' => ['rotulo' => 'Veículo pessoal', 'legenda' => 'estimativa de custo', 'tipo' => Transporte::TIPO_VEICULO_PESSOAL, 'icone' => 'carro', 'cores' => '--mc:#7046c9;--ms:#efe9fb;--mb:#d3c4f3']
+    ];
+
+    private const FUNDO_LOGO = ['o2' => '#d81a60', 'o3' => '#0a4386'];
 
     public static function getBusca(): string
     {
         $obUsuario = self::exigirAutenticacao();
-        self::carregarRoteiros($obUsuario);
+        $obRoteiro = self::exigirRoteiroContexto($obUsuario);
+        $modo      = self::parametroPermitido('modo', self::MODOS, 'onibus');
 
-        $contexto = self::$roteiroContexto;
-        $filtros  = [
-            'origem'  => trim($_GET['origem'] ?? ''),
-            'destino' => trim($_GET['destino'] ?? self::getPrimeiraCidadeContexto()),
-            'data'    => $_GET['data'] ?? ($contexto ? max($contexto->getDataInicio(), date('Y-m-d')) : ''),
-            'tipo'    => self::parametroPermitido('tipo', self::TIPOS, 'todos'),
-            'ordem'   => self::parametroPermitido('ordem', self::ORDENS, 'horario'),
-            'pessoas' => $_GET['pessoas'] ?? '1'
-        ];
-
-        $feedback   = '';
-        $resultados = self::getEstadoInicialBusca(
-            'Pesquise passagens',
-            'Informe origem, destino e data. Os resultados simulam a consulta a companhias aéreas e rodoviárias parceiras.'
-        );
-
-        if(isset($_GET['origem'])){
-            $erros = self::validarFiltros($filtros);
-
-            if(!empty($erros)){
-                $feedback   = self::getAlertaLista('erro', $erros);
-                $resultados = '';
-            }else{
-                $resultados = self::getResultados($filtros);
-            }
-        }
+        $conteudo = $modo === 'veiculo'
+            ? self::getEstimativaVeiculo($obRoteiro)
+            : self::getOfertas($obRoteiro, $modo);
 
         return self::renderizarPagina('transporte/busca.php', [
-            'bannerContexto'  => self::getBannerContexto(),
-            'campoContexto'   => self::getCampoRoteiroContexto(),
-            'feedback'        => $feedback,
-            'valorOrigem'     => self::e($filtros['origem']),
-            'valorDestino'    => self::e($filtros['destino']),
-            'valorData'       => self::e($filtros['data']),
-            'valorPessoas'    => self::e($filtros['pessoas']),
-            'dataMinima'      => date('Y-m-d'),
-            'opcoesTipo'      => self::opcoesSelect(self::TIPOS, $filtros['tipo']),
-            'opcoesOrdem'     => self::opcoesSelect(self::ORDENS, $filtros['ordem']),
-            'datalistCidades' => self::getDatalistCidades(),
-            'resultados'      => $resultados
-        ], 'transporte', 'Transporte');
+            'abas'     => self::getAbasModo('/transporte?roteiro=' . $obRoteiro->getIdRoteiro(), self::MODOS, $modo),
+            'conteudo' => $conteudo
+        ], 'transporte', 'Transporte', [
+            'cabecalhoPagina' => self::getCabecalhoPagina($obRoteiro, 'Transporte', 'Compare todas as formas de chegar ao destino, inclusive com o seu próprio veículo.', self::MODOS[$modo]['icone'], self::MODOS[$modo]['cores']),
+            'barraEtapas'     => self::getBarraEtapas($obRoteiro, 'Transporte')
+        ]);
     }
 
-    private static function validarFiltros(array $filtros): array
+    private static function getOfertas(Roteiro $obRoteiro, string $modo): string
     {
-        $erros = [];
+        $origem      = explode(' - ', $obRoteiro->getOrigem())[0];
+        $destino     = self::getNomeDestino($obRoteiro);
+        $tipo        = self::MODOS[$modo]['tipo'];
+        $pessoas     = $obRoteiro->getQuantidadePessoas();
+        $filtroPreco = (int) ($_GET['precoMaximo'] ?? self::PRECO_MAXIMO_FILTRO);
+        $filtroPreco = max(50, min(self::PRECO_MAXIMO_FILTRO, $filtroPreco));
 
-        if($filtros['origem'] === '')  $erros[] = 'Informe a cidade de origem.';
-        if($filtros['destino'] === '') $erros[] = 'Informe a cidade de destino.';
+        $todas  = Transporte::pesquisar($origem, $destino, $obRoteiro->getDataInicio(), null, $tipo);
+        $opcoes = $filtroPreco >= self::PRECO_MAXIMO_FILTRO
+            ? $todas
+            : Transporte::pesquisar($origem, $destino, $obRoteiro->getDataInicio(), (float) $filtroPreco, $tipo);
 
-        if($filtros['origem'] !== '' and Texto::iguais($filtros['origem'], $filtros['destino'])){
-            $erros[] = 'A origem e o destino precisam ser cidades diferentes.';
+        $filtro = ViewRenderer::getComponente([
+            'idRoteiro'    => $obRoteiro->getIdRoteiro(),
+            'modo'         => $modo,
+            'valorFiltro'  => $filtroPreco,
+            'maximoFiltro' => self::PRECO_MAXIMO_FILTRO,
+            'textoFiltro'  => $filtroPreco >= self::PRECO_MAXIMO_FILTRO ? 'qualquer valor' : 'até ' . self::moeda($filtroPreco),
+            'contagem'     => count($opcoes) . ' de ' . count($todas) . ' opções'
+        ], self::$pathComponentesTransporte, 'filtro.php');
+
+        if($origem === ''){
+            return $filtro . self::getCartaoVazio('Informe a cidade de origem do roteiro para pesquisarmos as passagens.');
         }
-
-        if(!Validador::data($filtros['data'])){
-            $erros[] = 'Informe uma data de viagem válida.';
-        }elseif($filtros['data'] < date('Y-m-d')){
-            $erros[] = 'A data da viagem não pode estar no passado.';
-        }
-
-        if(!Validador::inteiroEntre($filtros['pessoas'], 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
-            $erros[] = 'A quantidade de passageiros deve ficar entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.';
-        }
-
-        return $erros;
-    }
-
-    private static function getResultados(array $filtros): string
-    {
-        $opcoes  = Transporte::pesquisar($filtros['origem'], $filtros['destino'], $filtros['data'], $filtros['tipo']);
-        $pessoas = (int) $filtros['pessoas'];
-
-        if($filtros['ordem'] === 'preco')   usort($opcoes, fn($a, $b) => $a->getPreco() <=> $b->getPreco());
-        if($filtros['ordem'] === 'duracao') usort($opcoes, fn($a, $b) => $a->getDuracaoMinutos() <=> $b->getDuracaoMinutos());
 
         if(empty($opcoes)){
-            return self::getEstadoVazio('Nenhuma opção encontrada', 'Não encontramos opções para esse trecho. Tente outra data ou outro tipo de transporte.');
+            $mensagem = empty($todas)
+                ? 'Não encontramos opções desse tipo de transporte de ' . $origem . ' para ' . $destino . '. Tente outro tipo de transporte.'
+                : 'Nenhuma opção até ' . self::moeda($filtroPreco) . ' por pessoa. Arraste o filtro para a direita para ver opções mais caras.';
+
+            return $filtro . self::getCartaoVazio($mensagem);
         }
 
-        $cards = array_map(function(Transporte $obTransporte) use ($filtros, $pessoas){
-            $disponivel = $obTransporte->verificarDisponibilidade($obTransporte->getDataHoraPartida(), $pessoas);
-            $assentos   = $obTransporte->getAssentosDisponiveis();
+        $maisBarato = min(array_map(fn(Transporte $obTransporte) => $obTransporte->getPreco(), $opcoes));
+        $maisRapido = min(array_map(fn(Transporte $obTransporte) => $obTransporte->getDuracaoMinutos(), $opcoes));
+        $noRoteiro  = array_map(fn(ItemRoteiro $obItem) => (string) $obItem->getIdServico(), $obRoteiro->getItens());
+        $variasOpcoes = count($opcoes) > 1;
 
-            $motivo = null;
-            if(!$disponivel){
-                $motivo = $assentos === 0 ? 'Esgotado' : ($assentos < $pessoas ? 'Assentos insuficientes' : 'Partida já realizada');
+        $cards = array_map(function(Transporte $obTransporte) use ($obRoteiro, $modo, $pessoas, $origem, $destino, $maisBarato, $maisRapido, $noRoteiro, $variasOpcoes){
+            $apresentacao = ApiTransporteSimulada::getApresentacao($obTransporte->getIdTransporte());
+            $diasDepois   = (int) (new \DateTime(substr($obTransporte->getDataHoraPartida(), 0, 10)))->diff(new \DateTime(substr($obTransporte->getDataHoraChegada(), 0, 10)))->days;
+            $etiquetas    = '';
+
+            if($variasOpcoes and $obTransporte->getPreco() == $maisBarato){
+                $etiquetas .= '<span class="rounded-full bg-ok-suave px-2.5 py-0.5 text-[11.5px] font-extrabold text-ok">Mais barato</span>';
             }
 
-            $diasDepois = Validador::diasEntre(substr($obTransporte->getDataHoraPartida(), 0, 10), substr($obTransporte->getDataHoraChegada(), 0, 10));
+            if($variasOpcoes and $obTransporte->getDuracaoMinutos() === $maisRapido){
+                $etiquetas .= '<span class="rounded-full bg-[#e8f0fd] px-2.5 py-0.5 text-[11.5px] font-extrabold text-[#2563c9]">Mais rápido</span>';
+            }
+
+            $fundoLogo = self::FUNDO_LOGO[$obTransporte->getIdTransporte()] ?? '';
 
             return [
-                'icone'        => Icones::get($obTransporte->isVoo() ? 'aviao' : 'onibus', 'h-6 w-6'),
-                'corIcone'     => $obTransporte->isVoo() ? 'bg-blue-50 text-blue-900' : 'bg-amber-50 text-amber-700',
-                'tipo'         => $obTransporte->getRotuloTipo(),
-                'empresa'      => self::e($obTransporte->getEmpresa()),
-                'horaPartida'  => Formatador::hora($obTransporte->getDataHoraPartida()),
-                'horaChegada'  => Formatador::hora($obTransporte->getDataHoraChegada()),
-                'diasDepois'   => $diasDepois > 0 ? '<sup class="ml-0.5 text-xs font-semibold text-orange-600">+' . $diasDepois . '</sup>' : '',
-                'origem'       => self::e($obTransporte->getLocalOrigem()),
-                'destino'      => self::e($obTransporte->getLocalDestino()),
-                'duracao'      => Formatador::duracao($obTransporte->getDuracaoMinutos()),
-                'assentos'     => $assentos === 0
-                    ? '<span class="text-red-600">Sem assentos</span>'
-                    : ($assentos <= 5 ? '<span class="text-orange-600">Últimos ' . $assentos . ' assentos</span>' : $assentos . ' assentos disponíveis'),
-                'preco'        => self::moeda($obTransporte->getPreco()),
-                'total'        => $pessoas > 1 ? 'Total para ' . $pessoas . ' pessoas: ' . self::moeda($obTransporte->getPreco() * $pessoas) : 'por pessoa',
-                'codigo'       => self::e($obTransporte->getIdTransporte()),
-                'formAdicionar'=> self::getFormAdicionar([
+                'cores'       => self::MODOS[$modo]['cores'],
+                'estiloLogo'  => $fundoLogo ? 'background:' . $fundoLogo . ';border-color:' . $fundoLogo : '',
+                'logo'        => '/public/img/transporte/' . self::e($apresentacao['logo'] ?? ''),
+                'empresa'     => self::e($modo === 'carona' ? 'BlaBlaCar' : $obTransporte->getEmpresa()),
+                'motorista'   => $modo === 'carona' ? '<span class="whitespace-nowrap text-[11.5px] font-bold text-tinta">' . self::e($obTransporte->getEmpresa() . ' · ' . str_replace('via BlaBlaCar · ', '', $apresentacao['subtitulo'] ?? '')) . '</span>' : '',
+                'etiquetas'   => $etiquetas ? '<div class="mb-1.5 flex flex-wrap gap-1.5">' . $etiquetas . '</div>' : '',
+                'horaPartida' => Formatador::hora($obTransporte->getDataHoraPartida()),
+                'horaChegada' => Formatador::hora($obTransporte->getDataHoraChegada()),
+                'diasDepois'  => $diasDepois > 0 ? '<sup class="text-[11px] text-laranja-escuro">+' . $diasDepois . ' dia</sup>' : '',
+                'icone'       => Icones::get(self::MODOS[$modo]['icone'], 'box-content h-[22px] w-[22px] bg-white px-[3px] text-(--mc)'),
+                'duracao'     => intdiv($obTransporte->getDuracaoMinutos(), 60) . 'h' . str_pad((string) ($obTransporte->getDuracaoMinutos() % 60), 2, '0', STR_PAD_LEFT),
+                'detalhes'    => self::e($apresentacao['detalhes'] ?? $obTransporte->getDetalhesServico()),
+                'total'       => self::moeda($obTransporte->calcularCusto($pessoas)),
+                'porPessoa'   => self::moeda($obTransporte->getPreco()) . ' por pessoa · ' . $pessoas . ($pessoas === 1 ? ' pessoa' : ' pessoas'),
+                'linkSite'    => self::e($apresentacao['linkSite'] ?? '#'),
+                'iconeSite'   => Icones::get('externo', 'h-4 w-4'),
+                'botao'       => self::getBotaoAdicionar($obRoteiro, [
                     'tipoServico' => ItemRoteiro::TIPO_TRANSPORTE,
                     'idServico'   => $obTransporte->getIdTransporte(),
-                    'origem'      => $filtros['origem'],
-                    'destino'     => $filtros['destino'],
-                    'data'        => $filtros['data'],
+                    'origem'      => $origem,
+                    'destino'     => $destino,
+                    'data'        => $obRoteiro->getDataInicio(),
                     'pessoas'     => $pessoas
-                ], $motivo)
+                ], in_array($obTransporte->getIdTransporte(), $noRoteiro, true))
             ];
         }, $opcoes);
 
-        $titulo = sprintf(
-            '<p class="mb-4 text-sm text-slate-500"><strong class="text-blue-950">%d opções</strong> de %s para %s em %s · %s</p>',
-            count($opcoes),
-            self::e($filtros['origem']),
-            self::e($filtros['destino']),
-            Formatador::data($filtros['data']),
-            strtolower(Formatador::diaSemana($filtros['data']))
-        );
+        return $filtro . '<div class="flex flex-col gap-3">' . ViewRenderer::getLista($cards, self::$pathComponentesTransporte, 'card.php') . '</div>';
+    }
 
-        return $titulo . '<div class="space-y-4">' . ViewRenderer::getLista($cards, self::$pathComponentesTransporte, 'card.php') . '</div>';
+    private static function getEstimativaVeiculo(Roteiro $obRoteiro): string
+    {
+        $opcoesVeiculo     = array_combine(VeiculoPessoal::TIPOS_VEICULO, VeiculoPessoal::TIPOS_VEICULO);
+        $opcoesCombustivel = array_combine(VeiculoPessoal::COMBUSTIVEIS, VeiculoPessoal::COMBUSTIVEIS);
+
+        return ViewRenderer::getComponente([
+            'idRoteiro'         => $obRoteiro->getIdRoteiro(),
+            'opcoesVeiculo'     => self::opcoesSelect($opcoesVeiculo, 'Carro'),
+            'opcoesCombustivel' => self::opcoesSelect($opcoesCombustivel, 'Gasolina'),
+            'voltar'            => self::e($_SERVER['REQUEST_URI'] ?? '/transporte'),
+            'iconeMais'         => Icones::get('mais', 'h-4 w-4')
+        ], self::$pathComponentesTransporte, 'veiculo.php');
+    }
+
+    private static function getCartaoVazio(string $mensagem): string
+    {
+        return '<div class="cartao text-center text-apagado">' . self::e($mensagem) . '</div>';
     }
 }

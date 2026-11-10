@@ -5,12 +5,10 @@ namespace Models;
 use Services\ApiTransporteSimulada;
 use Utils\Formatador;
 
-/**
- * Opção de deslocamento (voo ou ônibus) retornada pela API simulada.
- * O id é um código alfanumérico gerado pela "API" (ex.: V3fa91c0d2).
- */
 class Transporte implements ServicoRoteiro
 {
+    const TIPO_VEICULO_PESSOAL = 'veiculo';
+
     private string $idTransporte;
 
     private string $tipoTransporte;
@@ -31,6 +29,30 @@ class Transporte implements ServicoRoteiro
 
     private int $assentosDisponiveis;
 
+    public function __construct(
+        string $idTransporte,
+        string $tipoTransporte,
+        string $empresa,
+        string $localOrigem,
+        string $localDestino,
+        string $dataHoraPartida,
+        string $dataHoraChegada,
+        int $duracaoMinutos,
+        float $preco,
+        int $assentosDisponiveis
+    ){
+        $this->idTransporte        = $idTransporte;
+        $this->tipoTransporte      = $tipoTransporte;
+        $this->empresa             = $empresa;
+        $this->localOrigem         = $localOrigem;
+        $this->localDestino        = $localDestino;
+        $this->dataHoraPartida     = $dataHoraPartida;
+        $this->dataHoraChegada     = $dataHoraChegada;
+        $this->duracaoMinutos      = $duracaoMinutos;
+        $this->preco               = $preco;
+        $this->assentosDisponiveis = $assentosDisponiveis;
+    }
+
     public function getIdTransporte(): string { return $this->idTransporte; }
     public function getTipoTransporte(): string { return $this->tipoTransporte; }
     public function getEmpresa(): string { return $this->empresa; }
@@ -49,12 +71,19 @@ class Transporte implements ServicoRoteiro
 
     public function getRotuloTipo(): string
     {
-        return $this->isVoo() ? 'Voo' : 'Ônibus';
+        return match($this->tipoTransporte){
+            ApiTransporteSimulada::TIPO_VOO    => 'Avião',
+            ApiTransporteSimulada::TIPO_CARONA => 'Carona',
+            self::TIPO_VEICULO_PESSOAL         => 'Veículo pessoal',
+            default                         => 'Ônibus',
+        };
     }
 
-    /**
-     * Disponível se a partida ainda não ocorreu e houver assentos suficientes.
-     */
+    public function calcularCusto(int $quantidadePessoas): float
+    {
+        return round($this->preco * $quantidadePessoas, 2);
+    }
+
     public function verificarDisponibilidade(string $dataHora, int $quantidadePessoas): bool
     {
         return strtotime($dataHora) > time() && $quantidadePessoas <= $this->assentosDisponiveis;
@@ -74,7 +103,6 @@ class Transporte implements ServicoRoteiro
         );
     }
 
-    // ServicoRoteiro
     public function getTipoServico(): string { return ItemRoteiro::TIPO_TRANSPORTE; }
     public function getIdServico(): int|string { return $this->idTransporte; }
     public function getNomeServico(): string { return $this->getRotuloTipo() . ' ' . $this->empresa; }
@@ -91,22 +119,22 @@ class Transporte implements ServicoRoteiro
         );
     }
 
-    /**
-     * RF02: busca opções com filtros de data, origem/destino e tipo.
-     *
-     * @return Transporte[]
-     */
-    public static function pesquisar(string $origem, string $destino, string $data, string $tipo = 'todos'): array
+    public static function pesquisar(string $origem, string $destino, string $data, ?float $precoMaximo = null, string $tipo = 'todos'): array
     {
-        return array_map(
-            fn($registro) => self::criar($registro),
+        $opcoes = array_map(
+            fn($registro) => self::fromArray($registro),
             ApiTransporteSimulada::buscar($origem, $destino, $data, $tipo)
         );
+
+        if($precoMaximo !== null){
+            $opcoes = array_values(array_filter($opcoes, fn(Transporte $obTransporte) => $obTransporte->preco <= $precoMaximo));
+        }
+
+        usort($opcoes, fn(Transporte $a, Transporte $b) => $a->preco <=> $b->preco);
+
+        return $opcoes;
     }
 
-    /**
-     * Reencontra uma opção pelo código refazendo a mesma busca na API simulada.
-     */
     public static function buscarPorCodigo(string $origem, string $destino, string $data, string $codigo): ?Transporte
     {
         foreach(self::pesquisar($origem, $destino, $data) as $obTransporte){
@@ -118,20 +146,39 @@ class Transporte implements ServicoRoteiro
         return null;
     }
 
-    private static function criar(array $registro): Transporte
+    public function toArray(): array
     {
-        $obTransporte                      = new Transporte();
-        $obTransporte->idTransporte        = $registro['idTransporte'];
-        $obTransporte->tipoTransporte      = $registro['tipoTransporte'];
-        $obTransporte->empresa             = $registro['empresa'];
-        $obTransporte->localOrigem         = $registro['localOrigem'];
-        $obTransporte->localDestino        = $registro['localDestino'];
-        $obTransporte->dataHoraPartida     = $registro['dataHoraPartida'];
-        $obTransporte->dataHoraChegada     = $registro['dataHoraChegada'];
-        $obTransporte->duracaoMinutos      = (int) $registro['duracaoMinutos'];
-        $obTransporte->preco               = (float) $registro['preco'];
-        $obTransporte->assentosDisponiveis = (int) $registro['assentosDisponiveis'];
+        return [
+            'idTransporte'        => $this->idTransporte,
+            'tipoTransporte'      => $this->tipoTransporte,
+            'empresa'             => $this->empresa,
+            'localOrigem'         => $this->localOrigem,
+            'localDestino'        => $this->localDestino,
+            'dataHoraPartida'     => $this->dataHoraPartida,
+            'dataHoraChegada'     => $this->dataHoraChegada,
+            'duracaoMinutos'      => $this->duracaoMinutos,
+            'preco'               => $this->preco,
+            'assentosDisponiveis' => $this->assentosDisponiveis
+        ];
+    }
 
-        return $obTransporte;
+    public static function fromArray(array $registro): Transporte
+    {
+        if(($registro['tipoTransporte'] ?? '') === self::TIPO_VEICULO_PESSOAL){
+            return VeiculoPessoal::fromArray($registro);
+        }
+
+        return new Transporte(
+            (string) $registro['idTransporte'],
+            $registro['tipoTransporte'],
+            $registro['empresa'],
+            $registro['localOrigem'],
+            $registro['localDestino'],
+            $registro['dataHoraPartida'],
+            $registro['dataHoraChegada'],
+            (int) $registro['duracaoMinutos'],
+            (float) $registro['preco'],
+            (int) $registro['assentosDisponiveis']
+        );
     }
 }

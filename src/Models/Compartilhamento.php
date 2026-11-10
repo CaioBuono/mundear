@@ -2,15 +2,10 @@
 
 namespace Models;
 
-/**
- * Link de acesso externo, somente leitura, de um roteiro
- * (composição Roteiro ◆— 0..1 Compartilhamento).
- */
 class Compartilhamento
 {
     private int $idCompartilhamento;
 
-    /** Código aleatório e imprevisível que identifica o link. */
     private string $token;
 
     private string $urlLink;
@@ -21,9 +16,6 @@ class Compartilhamento
 
     private string $dataCriacao;
 
-    /**
-     * @param string|null $dataExpiracao data limite (Y-m-d H:i:s) ou null para não expirar
-     */
     public static function criar(int $idCompartilhamento, ?string $dataExpiracao): Compartilhamento
     {
         $obCompartilhamento                     = new Compartilhamento();
@@ -35,9 +27,6 @@ class Compartilhamento
         return $obCompartilhamento;
     }
 
-    /**
-     * Gera (na primeira chamada) ou retorna o link de acesso.
-     */
     public function gerarLinkAcesso(): string
     {
         if(empty($this->token)){

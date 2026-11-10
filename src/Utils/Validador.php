@@ -2,9 +2,6 @@
 
 namespace Utils;
 
-/**
- * Validações reutilizáveis (RN05: bloquear dados inválidos antes de salvar).
- */
 class Validador
 {
     public static function email(string $email): bool
@@ -12,9 +9,6 @@ class Validador
         return (bool) preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email);
     }
 
-    /**
-     * Confere se a string é uma data real no formato Y-m-d (ex.: rejeita 2026-02-30).
-     */
     public static function data(?string $data): bool
     {
         if(!is_string($data) or $data === '') return false;

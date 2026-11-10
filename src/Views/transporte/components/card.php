@@ -1,41 +1,26 @@
-<article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="flex flex-col gap-5 lg:flex-row lg:items-center">
-        <!-- EMPRESA -->
-        <div class="flex items-center gap-3 lg:w-56">
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl {{corIcone}}">{{icone}}</span>
-            <div class="min-w-0">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{tipo}}</p>
-                <p class="truncate font-semibold text-blue-950">{{empresa}}</p>
-                <p class="text-xs text-slate-400">Cód. {{codigo}}</p>
-            </div>
+<article class="cartao grid items-center gap-5 border-l-4 border-l-(--mc) !px-[18px] !py-4 md:grid-cols-[150px_minmax(0,1fr)_auto]" style="{{cores}}">
+    <div class="flex h-[72px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[10px] border border-linha bg-white px-3.5 py-2.5" style="{{estiloLogo}}">
+        <img src="{{logo}}" alt="{{empresa}}" class="block h-auto max-h-11 w-auto max-w-full">
+        {{motorista}}
+    </div>
+
+    <div class="min-w-0">
+        {{etiquetas}}
+        <div class="flex items-center gap-3 font-display text-xl font-extrabold">
+            {{horaPartida}}
+            <span class="relative grid h-0.5 flex-[0_1_130px] place-items-center bg-[repeating-linear-gradient(90deg,var(--mb)_0_6px,transparent_6px_10px)]">{{icone}}</span>
+            <span>{{horaChegada}}{{diasDepois}}</span>
+            <span class="font-sans text-xs font-bold text-apagado">{{duracao}}</span>
         </div>
+        <p class="mt-1 text-[13px] text-apagado">{{detalhes}}</p>
+    </div>
 
-        <!-- TRAJETO -->
-        <div class="flex flex-1 items-center gap-4">
-            <div class="text-center">
-                <p class="text-2xl font-bold text-blue-950">{{horaPartida}}</p>
-                <p class="max-w-28 truncate text-sm text-slate-500">{{origem}}</p>
-            </div>
-
-            <div class="flex flex-1 flex-col items-center">
-                <p class="text-xs text-slate-500">{{duracao}}</p>
-                <div class="my-1 h-px w-full bg-slate-300"></div>
-                <p class="text-xs text-slate-500">{{assentos}}</p>
-            </div>
-
-            <div class="text-center">
-                <p class="text-2xl font-bold text-blue-950">{{horaChegada}}{{diasDepois}}</p>
-                <p class="max-w-28 truncate text-sm text-slate-500">{{destino}}</p>
-            </div>
-        </div>
-
-        <!-- PREÇO -->
-        <div class="flex flex-col gap-3 border-t border-slate-100 pt-4 lg:w-80 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-            <div class="flex items-baseline justify-between gap-2 lg:block">
-                <p class="text-2xl font-bold text-orange-500">{{preco}}</p>
-                <p class="text-xs text-slate-500">{{total}}</p>
-            </div>
-            {{formAdicionar}}
+    <div class="flex flex-col items-start gap-2 md:items-end">
+        <span class="font-display text-[21px] font-extrabold leading-tight text-(--mc)">{{total}}</span>
+        <span class="text-xs text-apagado md:text-right">{{porPessoa}}</span>
+        <div class="flex flex-wrap gap-2 md:justify-end">
+            <a href="{{linkSite}}" target="_blank" rel="noopener" class="btn-secundario">{{iconeSite}}Ver no site</a>
+            {{botao}}
         </div>
     </div>
 </article>

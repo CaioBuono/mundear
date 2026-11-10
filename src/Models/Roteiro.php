@@ -3,23 +3,23 @@
 namespace Models;
 
 use BD\TabelaJson;
-use Exceptions\RegraNegocioException;
+use Exceptions\DadosInvalidosException;
+use Exceptions\EstadoInvalidoException;
+use Exceptions\OperacaoNaoPermitidaException;
+use Exceptions\RegistroNaoEncontradoException;
 use Utils\Formatador;
 use Utils\Texto;
 use Utils\Validador;
 
-/**
- * O "carrinho" da viagem.
- *
- * Modelagem NoSQL (documento em src/BD/table_roteiro.json):
- *  - composição  (ItemRoteiro, Compartilhamento) => documentos embutidos no roteiro;
- *  - agregação   (Destino)                       => apenas os ids (idDestinos);
- *  - associação  (Usuario)                       => idUsuario.
- */
 class Roteiro
 {
-    const STATUS_RASCUNHO   = 'rascunho';
-    const STATUS_FINALIZADO = 'finalizado';
+    const STATUS_EM_PLANEJAMENTO  = 'Em planejamento';
+    const STATUS_PRONTO_PARA_VIAJAR = 'Pronto para viajar';
+    const STATUS_VIAGEM_REALIZADA = 'Viagem realizada';
+
+    const ETAPAS = ['Transporte', 'Hospedagem', 'Turismo', 'Revisão'];
+
+    const DIAS_VALIDADE_LINK = 30;
 
     const DURACAO_MAXIMA_DIAS = 60;
 
@@ -33,15 +33,25 @@ class Roteiro
 
     private string $dataFim = '';
 
+    private string $origem = '';
+
+    private int $quantidadePessoas = 1;
+
+    private ?float $orcamento = null;
+
+    private string $etapaAtual = 'Transporte';
+
     private float $valorTotalEstimado = 0;
 
-    private string $status = self::STATUS_RASCUNHO;
+    private string $status = self::STATUS_EM_PLANEJAMENTO;
 
-    /** @var int[] */
     private array $idDestinos = [];
 
-    /** @var ItemRoteiro[] */
     private array $itens = [];
+
+    private array $gastosExtras = [];
+
+    private array $anotacoes = [];
 
     private ?Compartilhamento $compartilhamento = null;
 
@@ -60,17 +70,30 @@ class Roteiro
     public function getDataInicio(): string { return $this->dataInicio; }
     public function getDataFim(): string { return $this->dataFim; }
     public function getValorTotalEstimado(): float { return $this->valorTotalEstimado; }
-    public function getStatus(): string { return $this->status; }
+    public function getOrigem(): string { return $this->origem; }
+    public function getQuantidadePessoas(): int { return $this->quantidadePessoas; }
+    public function getOrcamento(): ?float { return $this->orcamento; }
+    public function getEtapaAtual(): string { return $this->etapaAtual; }
+    public function getGastosExtras(): array { return $this->gastosExtras; }
+    public function getAnotacoes(): array { return $this->anotacoes; }
+
+    public function getStatus(): string
+    {
+        if($this->status === self::STATUS_PRONTO_PARA_VIAJAR and $this->dataFim < date('Y-m-d')){
+            return self::STATUS_VIAGEM_REALIZADA;
+        }
+
+        return $this->status;
+    }
     public function getIdDestinos(): array { return $this->idDestinos; }
     public function getCompartilhamento(): ?Compartilhamento { return $this->compartilhamento; }
     public function getDataAtualizacao(): ?string { return $this->dataAtualizacao; }
 
-    /** @return ItemRoteiro[] */
     public function getItens(): array { return $this->itens; }
 
     public function isFinalizado(): bool
     {
-        return $this->status === self::STATUS_FINALIZADO;
+        return $this->status !== self::STATUS_EM_PLANEJAMENTO;
     }
 
     public function possuiLinkAtivo(): bool
@@ -78,13 +101,17 @@ class Roteiro
         return $this->compartilhamento !== null && $this->compartilhamento->isValido();
     }
 
-    // ------------------------------------------------------------------
-    // Criação e edição dos dados iniciais (RF05 / RF06)
-    // ------------------------------------------------------------------
+    public function getAnotacaoDoDia(string $data): ?Anotacao
+    {
+        foreach($this->anotacoes as $obAnotacao){
+            if($obAnotacao->getData() === $data){
+                return $obAnotacao;
+            }
+        }
 
-    /**
-     * RN05: valida nome, datas e destinos. Retorna as mensagens de erro (vazio = válido).
-     */
+        return null;
+    }
+
     public static function validarDados(array $dados, ?Roteiro $roteiroAtual = null): array
     {
         $erros  = [];
@@ -113,6 +140,17 @@ class Roteiro
             }
         }
 
+        if(array_key_exists('quantidadePessoas', $dados) and !Validador::inteiroEntre($dados['quantidadePessoas'], 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
+            $erros[] = 'O número de pessoas deve ficar entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.';
+        }
+
+        $orcamento = str_replace(',', '.', (string) ($dados['orcamento'] ?? ''));
+        if($orcamento !== '' and !Validador::decimalPositivo($orcamento)){
+            $erros[] = 'O orçamento, quando informado, deve ser maior que zero.';
+        }
+
+        if(strlen(trim($dados['origem'] ?? '')) > 80) $erros[] = 'A origem pode ter no máximo 80 caracteres.';
+
         $idDestinos = array_unique(array_map('intval', (array) ($dados['destinos'] ?? [])));
         if(empty($idDestinos)){
             $erros[] = 'Selecione pelo menos um destino.';
@@ -127,7 +165,7 @@ class Roteiro
     {
         $erros = self::validarDados($dados);
         if(!empty($erros)){
-            throw new RegraNegocioException(implode(' ', $erros));
+            throw new DadosInvalidosException(implode(' ', $erros), 'RN02');
         }
 
         $obRoteiro              = new Roteiro();
@@ -139,19 +177,23 @@ class Roteiro
         return $obRoteiro;
     }
 
-    /**
-     * Altera nome, período e destinos garantindo que os itens já adicionados
-     * continuem válidos (RN03 e RN04).
-     */
     public function atualizarDados(array $dados): void
     {
         $erros = self::validarDados($dados, $this);
         if(!empty($erros)){
-            throw new RegraNegocioException(implode(' ', $erros));
+            throw new DadosInvalidosException(implode(' ', $erros), 'RN02');
         }
 
         $obSimulacao = clone $this;
         $obSimulacao->preencherDados($dados);
+
+        foreach($obSimulacao->gastosExtras as $obGasto){
+            $obSimulacao->validarDataNoPeriodo($obGasto->getData(), $obGasto->getDescricao());
+        }
+
+        foreach($obSimulacao->anotacoes as $obAnotacao){
+            $obSimulacao->validarDataNoPeriodo($obAnotacao->getData(), 'A anotação');
+        }
 
         foreach($this->itens as $obItem){
             $obSimulacao->validarPeriodoItem($obItem);
@@ -159,11 +201,11 @@ class Roteiro
             if($obItem->getTipoServico() === ItemRoteiro::TIPO_GUIA){
                 $obGuia = GuiaTuristico::getPorId((int) $obItem->getIdServico());
                 if($obGuia and !$obSimulacao->atendeCidade($obGuia->getCidadeAtuacao())){
-                    throw new RegraNegocioException(sprintf(
+                    throw new OperacaoNaoPermitidaException(sprintf(
                         'O guia %s atua em %s. Remova-o do roteiro antes de retirar esse destino.',
                         $obGuia->getNome(),
                         $obGuia->getCidadeAtuacao()
-                    ));
+                    ), 'RN05');
                 }
             }
         }
@@ -177,11 +219,28 @@ class Roteiro
         $this->dataInicio = $dados['dataInicio'];
         $this->dataFim    = $dados['dataFim'];
         $this->idDestinos = array_values(array_unique(array_map('intval', (array) $dados['destinos'])));
+        $this->origem     = trim($dados['origem'] ?? $this->origem);
+
+        if(array_key_exists('quantidadePessoas', $dados)){
+            $this->quantidadePessoas = (int) $dados['quantidadePessoas'];
+        }
+
+        if(array_key_exists('orcamento', $dados)){
+            $orcamento       = str_replace(',', '.', (string) $dados['orcamento']);
+            $this->orcamento = $orcamento === '' ? null : round((float) $orcamento, 2);
+        }
     }
 
-    // ------------------------------------------------------------------
-    // Carrinho de serviços (RF06, RF07, RN03, RN04, RN07)
-    // ------------------------------------------------------------------
+    public function avancarEtapa(): void
+    {
+        $posicao = array_search($this->etapaAtual, self::ETAPAS, true);
+
+        if($posicao === false or $posicao === count(self::ETAPAS) - 1){
+            throw new EstadoInvalidoException('O roteiro já está na etapa de revisão.', 'RN11');
+        }
+
+        $this->etapaAtual = self::ETAPAS[$posicao + 1];
+    }
 
     public function adicionarServico(ItemRoteiro $item): void
     {
@@ -208,9 +267,8 @@ class Roteiro
 
         $this->calcularValorTotal();
 
-        // RN02: sem serviços o roteiro volta a ser rascunho e o link deixa de valer
         if(empty($this->itens) and $this->isFinalizado()){
-            $this->status = self::STATUS_RASCUNHO;
+            $this->status = self::STATUS_EM_PLANEJAMENTO;
             $this->compartilhamento?->revogarAcesso();
         }
 
@@ -221,26 +279,109 @@ class Roteiro
     {
         $obItem = $this->getItem($idItem);
         if(!$obItem instanceof ItemRoteiro){
-            throw new RegraNegocioException('O item informado não pertence a este roteiro.');
+            throw new RegistroNaoEncontradoException('O item informado não pertence a este roteiro.');
         }
 
         $obItem->atualizarQuantidade($quantidadePessoas);
         $this->calcularValorTotal();
     }
 
-    /**
-     * RF07 / RN07: soma dos subtotais, recalculada a cada inclusão/remoção.
-     */
+    public function adicionarGastoExtra(GastoExtra|string $gastoOuDescricao, string $categoria = '', float $valor = 0, string $data = ''): void
+    {
+        $obGasto = $gastoOuDescricao instanceof GastoExtra
+            ? $gastoOuDescricao
+            : new GastoExtra($gastoOuDescricao, $categoria, $valor, $data);
+
+        $this->validarDataNoPeriodo($obGasto->getData(), $obGasto->getDescricao());
+
+        if($obGasto->getIdGasto() === 0){
+            $ids = array_map(fn(GastoExtra $obExistente) => $obExistente->getIdGasto(), $this->gastosExtras);
+            $obGasto->setIdGasto(empty($ids) ? 1 : max($ids) + 1);
+        }
+
+        $this->gastosExtras[] = $obGasto;
+        $this->calcularValorTotal();
+    }
+
+    public function removerGastoExtra(int $idGasto): bool
+    {
+        $quantidadeAntes    = count($this->gastosExtras);
+        $this->gastosExtras = array_values(array_filter($this->gastosExtras, fn(GastoExtra $obGasto) => $obGasto->getIdGasto() !== $idGasto));
+
+        if(count($this->gastosExtras) === $quantidadeAntes){
+            return false;
+        }
+
+        $this->calcularValorTotal();
+        return true;
+    }
+
+    public function adicionarAnotacao(string $data, string $texto): void
+    {
+        $this->validarDataNoPeriodo($data, 'A anotação');
+
+        $obAnotacao = $this->getAnotacaoDoDia($data);
+
+        if(trim($texto) === ''){
+            $this->anotacoes = array_values(array_filter($this->anotacoes, fn(Anotacao $obExistente) => $obExistente !== $obAnotacao));
+            return;
+        }
+
+        if($obAnotacao instanceof Anotacao){
+            $obAnotacao->editarTexto($texto);
+            return;
+        }
+
+        $ids        = array_map(fn(Anotacao $obExistente) => $obExistente->getIdAnotacao(), $this->anotacoes);
+        $obAnotacao = new Anotacao($data, $texto, empty($ids) ? 1 : max($ids) + 1);
+
+        $this->anotacoes[] = $obAnotacao;
+    }
+
     public function calcularValorTotal(): float
     {
-        $this->valorTotalEstimado = round(array_sum(array_map(fn($obItem) => $obItem->calcularSubtotal(), $this->itens)), 2);
+        $totalItens  = array_sum(array_map(fn($obItem) => $obItem->calcularSubtotal(), $this->itens));
+        $totalGastos = array_sum(array_map(fn(GastoExtra $obGasto) => $obGasto->getValor(), $this->gastosExtras));
+
+        $this->valorTotalEstimado = round($totalItens + $totalGastos, 2);
 
         return $this->valorTotalEstimado;
     }
 
-    /**
-     * RN03: o serviço precisa estar dentro do período da viagem.
-     */
+    public function calcularValorPorPessoa(): float
+    {
+        return round($this->calcularValorTotal() / max(1, $this->quantidadePessoas), 2);
+    }
+
+    public function calcularSaldoOrcamento(): ?float
+    {
+        if($this->orcamento === null){
+            return null;
+        }
+
+        return round($this->orcamento - $this->calcularValorTotal(), 2);
+    }
+
+    public function isOrcamentoUltrapassado(): bool
+    {
+        $saldo = $this->calcularSaldoOrcamento();
+
+        return $saldo !== null && $saldo < 0;
+    }
+
+    private function validarDataNoPeriodo(string $data, string $descricao): void
+    {
+        if($data < $this->dataInicio or $data > $this->dataFim){
+            throw new DadosInvalidosException(sprintf(
+                '"%s" (%s) está fora do período da viagem, de %s a %s.',
+                $descricao,
+                Formatador::data($data),
+                Formatador::data($this->dataInicio),
+                Formatador::data($this->dataFim)
+            ), 'RN04');
+        }
+    }
+
     private function validarPeriodoItem(ItemRoteiro $item): void
     {
         $inicio = $item->getDataAgendada();
@@ -249,33 +390,29 @@ class Roteiro
         if($inicio < $this->dataInicio or $fim > $this->dataFim){
             $periodoItem = $fim !== $inicio ? Formatador::data($inicio) . ' a ' . Formatador::data($fim) : Formatador::data($inicio);
 
-            throw new RegraNegocioException(sprintf(
+            throw new DadosInvalidosException(sprintf(
                 '"%s" (%s) está fora do período da viagem, de %s a %s.',
                 $item->getDescricao(),
                 $periodoItem,
                 Formatador::data($this->dataInicio),
                 Formatador::data($this->dataFim)
-            ));
+            ), 'RN04');
         }
     }
 
-    /**
-     * RN04: o guia precisa atuar em um dos destinos e não pode ser reservado
-     * duas vezes no mesmo dia do roteiro.
-     */
     private function validarGuia(?GuiaTuristico $obGuia, string $data): void
     {
         if(!$obGuia instanceof GuiaTuristico or !$obGuia->isAtivo()){
-            throw new RegraNegocioException('Este guia não está disponível para novas reservas.');
+            throw new OperacaoNaoPermitidaException('Este guia não está disponível para novas reservas.', 'RN14');
         }
 
         if(!$this->atendeCidade($obGuia->getCidadeAtuacao())){
-            throw new RegraNegocioException(sprintf(
+            throw new OperacaoNaoPermitidaException(sprintf(
                 '%s atua em %s, que não é destino deste roteiro (%s).',
                 $obGuia->getNome(),
                 $obGuia->getCidadeAtuacao(),
                 $this->getNomesDestinos()
-            ));
+            ), 'RN05');
         }
 
         foreach($this->itens as $obItem){
@@ -284,7 +421,7 @@ class Roteiro
                 (int) $obItem->getIdServico() === $obGuia->getIdGuia() and
                 $obItem->getDataAgendada() === $data
             ){
-                throw new RegraNegocioException($obGuia->getNome() . ' já está reservado(a) para ' . Formatador::data($data) . ' neste roteiro.');
+                throw new OperacaoNaoPermitidaException($obGuia->getNome() . ' já está reservado(a) para ' . Formatador::data($data) . ' neste roteiro.');
             }
         }
     }
@@ -307,33 +444,22 @@ class Roteiro
         return empty($ids) ? 1 : max($ids) + 1;
     }
 
-    // ------------------------------------------------------------------
-    // Finalização e compartilhamento (RF09, RN02, RN06)
-    // ------------------------------------------------------------------
-
-    public function finalizar(?string $dataExpiracao): Compartilhamento
-    {
-        $obCompartilhamento = $this->gerarLinkCompartilhamento($dataExpiracao);
-        $this->status       = self::STATUS_FINALIZADO;
-
-        return $obCompartilhamento;
-    }
-
-    /**
-     * Gera o link somente leitura. Se já existir um link válido, ele é mantido
-     * para não quebrar endereços que já foram enviados a outras pessoas.
-     */
-    public function gerarLinkCompartilhamento(?string $dataExpiracao): Compartilhamento
+    public function concluir(): Compartilhamento
     {
         if(empty($this->itens)){
-            throw new RegraNegocioException('Adicione pelo menos um serviço (transporte, hospedagem, guia ou passeio) antes de finalizar o roteiro e gerar o link.');
+            throw new EstadoInvalidoException('Adicione pelo menos um serviço (transporte, hospedagem, guia ou passeio) antes de concluir o roteiro e gerar o link.', 'RN03');
         }
 
-        if($this->possuiLinkAtivo()){
-            return $this->compartilhamento;
+        if($this->getStatus() === self::STATUS_VIAGEM_REALIZADA){
+            throw new EstadoInvalidoException('Esta viagem já foi realizada e não pode ser concluída novamente.', 'RN11');
         }
 
-        $this->compartilhamento = Compartilhamento::criar(self::gerarIdCompartilhamento(), $dataExpiracao);
+        if(!$this->possuiLinkAtivo()){
+            $dataExpiracao          = (new \DateTime('+' . self::DIAS_VALIDADE_LINK . ' days'))->format('Y-m-d H:i:s');
+            $this->compartilhamento = Compartilhamento::criar(self::gerarIdCompartilhamento(), $dataExpiracao);
+        }
+
+        $this->status = self::STATUS_PRONTO_PARA_VIAJAR;
 
         return $this->compartilhamento;
     }
@@ -341,7 +467,7 @@ class Roteiro
     public function revogarCompartilhamento(): void
     {
         if(!$this->compartilhamento or !$this->compartilhamento->isStatusAtivo()){
-            throw new RegraNegocioException('Este roteiro não possui um link ativo.');
+            throw new EstadoInvalidoException('Este roteiro não possui um link ativo.', 'RN08');
         }
 
         $this->compartilhamento->revogarAcesso();
@@ -357,10 +483,6 @@ class Roteiro
         return empty($ids) ? 1 : max($ids) + 1;
     }
 
-    // ------------------------------------------------------------------
-    // Persistência
-    // ------------------------------------------------------------------
-
     public function salvar(): void
     {
         $this->calcularValorTotal();
@@ -374,17 +496,10 @@ class Roteiro
         self::getTabela()->atualizar($this->idRoteiro, $this->toArray());
     }
 
-    /**
-     * RF08: por composição, itens e compartilhamento são apagados junto.
-     */
     public function excluir(): bool
     {
         return $this->idRoteiro !== null && self::getTabela()->excluir($this->idRoteiro);
     }
-
-    // ------------------------------------------------------------------
-    // Consultas
-    // ------------------------------------------------------------------
 
     public static function getPorId(int $idRoteiro): ?Roteiro
     {
@@ -392,18 +507,12 @@ class Roteiro
         return $registro ? self::fromArray($registro) : null;
     }
 
-    /**
-     * Garante que o roteiro pertence ao usuário (o usuário só altera os próprios roteiros).
-     */
     public static function getDoUsuario(int $idRoteiro, int $idUsuario): ?Roteiro
     {
         $obRoteiro = self::getPorId($idRoteiro);
         return ($obRoteiro and $obRoteiro->idUsuario === $idUsuario) ? $obRoteiro : null;
     }
 
-    /**
-     * @return Roteiro[] ordenados pela data de início
-     */
     public static function listarPorUsuario(int $idUsuario): array
     {
         $registros = self::getTabela()->listar(fn($roteiro) => (int) $roteiro['idUsuario'] === $idUsuario);
@@ -412,9 +521,6 @@ class Roteiro
         return array_map(fn($registro) => self::fromArray($registro), $registros);
     }
 
-    /**
-     * @return Roteiro[]
-     */
     public static function listarTodos(): array
     {
         return array_map(fn($registro) => self::fromArray($registro), self::getTabela()->listar());
@@ -448,7 +554,6 @@ class Roteiro
         return $total;
     }
 
-    /** @return Destino[] */
     public function getDestinos(): array
     {
         return Destino::getPorIds($this->idDestinos);
@@ -464,7 +569,6 @@ class Roteiro
         return Validador::diasEntre($this->dataInicio, $this->dataFim) + 1;
     }
 
-    /** @return string[] datas Y-m-d de todos os dias da viagem */
     public function getDatasDaViagem(): array
     {
         $datas = [];
@@ -478,9 +582,6 @@ class Roteiro
         return $datas;
     }
 
-    /**
-     * @return array<string, ItemRoteiro[]> itens agrupados pela data agendada
-     */
     public function getItensPorData(): array
     {
         $ordemTipo = [ItemRoteiro::TIPO_TRANSPORTE => 0, ItemRoteiro::TIPO_GUIA => 1, ItemRoteiro::TIPO_PASSEIO => 2, ItemRoteiro::TIPO_HOSPEDAGEM => 3];
@@ -497,9 +598,6 @@ class Roteiro
         return $agrupados;
     }
 
-    /**
-     * @return array<string, float> subtotal por tipo de serviço
-     */
     public function getTotaisPorTipo(): array
     {
         $totais = array_fill_keys(array_keys(ItemRoteiro::getRotulosTipo()), 0.0);
@@ -529,7 +627,16 @@ class Roteiro
         $obRoteiro->titulo             = $dados['titulo'];
         $obRoteiro->dataInicio         = $dados['dataInicio'];
         $obRoteiro->dataFim            = $dados['dataFim'];
-        $obRoteiro->status             = $dados['status'] ?? self::STATUS_RASCUNHO;
+        $obRoteiro->status             = match($dados['status'] ?? ''){
+            self::STATUS_PRONTO_PARA_VIAJAR, self::STATUS_VIAGEM_REALIZADA, 'finalizado' => self::STATUS_PRONTO_PARA_VIAJAR,
+            default                                                                     => self::STATUS_EM_PLANEJAMENTO,
+        };
+        $obRoteiro->origem             = $dados['origem'] ?? '';
+        $obRoteiro->quantidadePessoas  = (int) ($dados['quantidadePessoas'] ?? 1);
+        $obRoteiro->orcamento          = isset($dados['orcamento']) ? (float) $dados['orcamento'] : null;
+        $obRoteiro->etapaAtual         = in_array($dados['etapaAtual'] ?? '', self::ETAPAS, true) ? $dados['etapaAtual'] : self::ETAPAS[0];
+        $obRoteiro->gastosExtras       = array_map(fn($gasto) => GastoExtra::fromArray($gasto), $dados['gastosExtras'] ?? []);
+        $obRoteiro->anotacoes          = array_map(fn($anotacao) => Anotacao::fromArray($anotacao), $dados['anotacoes'] ?? []);
         $obRoteiro->idDestinos         = array_map('intval', $dados['idDestinos'] ?? []);
         $obRoteiro->itens              = array_map(fn($item) => ItemRoteiro::fromArray($item), $dados['itens'] ?? []);
         $obRoteiro->compartilhamento   = !empty($dados['compartilhamento']) ? Compartilhamento::fromArray($dados['compartilhamento']) : null;
@@ -548,12 +655,18 @@ class Roteiro
             'titulo'             => $this->titulo,
             'dataInicio'         => $this->dataInicio,
             'dataFim'            => $this->dataFim,
+            'origem'             => $this->origem,
+            'quantidadePessoas'  => $this->quantidadePessoas,
+            'orcamento'          => $this->orcamento,
+            'etapaAtual'         => $this->etapaAtual,
             'idDestinos'         => $this->idDestinos,
             'status'             => $this->status,
             'valorTotalEstimado' => $this->valorTotalEstimado,
             'dataCriacao'        => $this->dataCriacao,
             'dataAtualizacao'    => $this->dataAtualizacao,
             'itens'              => array_map(fn($obItem) => $obItem->toArray(), $this->itens),
+            'gastosExtras'       => array_map(fn(GastoExtra $obGasto) => $obGasto->toArray(), $this->gastosExtras),
+            'anotacoes'          => array_map(fn(Anotacao $obAnotacao) => $obAnotacao->toArray(), $this->anotacoes),
             'compartilhamento'   => $this->compartilhamento?->toArray()
         ];
     }

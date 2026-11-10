@@ -8,9 +8,9 @@ use Controllers\RoteiroController;
 use Controllers\TransporteController;
 use Controllers\TurismoController;
 use Controllers\UsuarioController;
+use Exceptions\RegraNegocioException;
 use Session\Session;
 
-//MAPA DE ROTAS: [MÉTODO][PATH] => [CONTROLLER, MÉTODO]
 $rotas = [
     'GET' => [
         '/'                   => [UsuarioController::class, 'getRaiz'],
@@ -39,6 +39,7 @@ $rotas = [
     ],
     'POST' => [
         '/login'                     => [UsuarioController::class, 'login'],
+        '/cadastro'                  => [UsuarioController::class, 'postCadastro'],
         '/recuperar-senha'           => [UsuarioController::class, 'postRecuperarSenha'],
         '/redefinir-senha'           => [UsuarioController::class, 'postRedefinirSenha'],
         '/perfil'                    => [UsuarioController::class, 'postPerfil'],
@@ -50,6 +51,8 @@ $rotas = [
         '/roteiros/finalizar'        => [RoteiroController::class, 'postFinalizar'],
         '/roteiros/revogar-link'     => [RoteiroController::class, 'postRevogarLink'],
         '/roteiros/itens/adicionar'  => [RoteiroController::class, 'postAdicionarItem'],
+        '/roteiros/itens/veiculo'    => [RoteiroController::class, 'postAdicionarVeiculo'],
+        '/roteiros/avancar-etapa'    => [RoteiroController::class, 'postAvancarEtapa'],
         '/roteiros/itens/remover'    => [RoteiroController::class, 'postRemoverItem'],
         '/roteiros/itens/quantidade' => [RoteiroController::class, 'postQuantidadeItem'],
 
@@ -61,7 +64,6 @@ $rotas = [
     ],
 ];
 
-//PATH REQUISITADO
 $metodo = $_SERVER['REQUEST_METHOD'];
 $path   = rtrim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/', '/') ?: '/';
 
@@ -75,15 +77,15 @@ try {
         return;
     }
 
-    //PROTEÇÃO CSRF EM TODOS OS FORMULÁRIOS
     if($metodo === 'POST' and !Session::validarTokenCsrf($_POST['_csrf'] ?? '')){
         echo ErroController::exibir(419, 'Sessão expirada', 'Por segurança, volte à página anterior, recarregue-a e tente novamente.');
         return;
     }
 
     echo call_user_func($rotas[$metodo][$path]);
+} catch (RegraNegocioException $erro) {
+    echo ErroController::exibir(422, 'Não foi possível concluir', $erro->getMessage());
 } catch (\Throwable $erro) {
-    // RNF04: registra o detalhe técnico no log e mostra mensagem amigável
     error_log('[Mundear] ' . $erro);
     echo ErroController::exibir(500, 'Algo deu errado', 'Não foi possível concluir sua solicitação agora. Tente novamente em instantes.');
 }

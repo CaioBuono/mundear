@@ -1,0 +1,40 @@
+[
+    {
+        "idUsuario": 1,
+        "nome": "Yasmin Vida",
+        "email": "yasvida@gmail.com",
+        "senha": "$argon2id$v=19$m=65536,t=4,p=1$dFVPWS52ZDY2OXNSVzBsVA$orUBpQ17x5yxuWXUsvjLzjR0cqb6RjEE0xdXyOU3hGE",
+        "dataCadastro": "2026-09-18 00:00:01",
+        "perfil": "viajante",
+        "ativo": true
+    },
+    {
+        "idUsuario": 2,
+        "nome": "Caio Buono",
+        "email": "caiobuono@gmail.com",
+        "senha": "",
+        "dataCadastro": "2026-09-18 00:00:02",
+        "perfil": "viajante",
+        "ativo": true
+    },
+    {
+        "idUsuario": 3,
+        "nome": "Administrador Mundear",
+        "email": "admin@mundear.com",
+        "senha": "$2y$12$PiSAJR8Jy6iByXsBgpnzGOsgL1R9/uio9fbxqOn8Nk.wNilNaCesG",
+        "dataCadastro": "2026-09-18 00:00:03",
+        "perfil": "administrador",
+        "ativo": true,
+        "codigoCredencial": "ADM-0001",
+        "nivelAcesso": 2
+    },
+    {
+        "idUsuario": 4,
+        "nome": "Viajante Demonstração",
+        "email": "viajante@mundear.com",
+        "senha": "$2y$12$VGsUcLhE5krcpstY2OykQeLxc13U.PZ.O7AD87bQm5n3iYiV6lR2m",
+        "dataCadastro": "2026-09-18 00:00:04",
+        "perfil": "viajante",
+        "ativo": true
+    }
+]

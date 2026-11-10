@@ -1,36 +1,80 @@
 [
-    { "idPasseio": 1, "idDestino": 1, "nomeAtracao": "Cristo Redentor", "localizacao": "Corcovado - Alto da Boa Vista", "duracaoMinutos": 180, "precoIngresso": 97.00, "diaFechado": null },
-    { "idPasseio": 2, "idDestino": 1, "nomeAtracao": "Bondinho Pão de Açúcar", "localizacao": "Av. Pasteur, 520 - Urca", "duracaoMinutos": 150, "precoIngresso": 195.00, "diaFechado": null },
-    { "idPasseio": 3, "idDestino": 1, "nomeAtracao": "Museu do Amanhã", "localizacao": "Praça Mauá, 1 - Centro", "duracaoMinutos": 120, "precoIngresso": 30.00, "diaFechado": 1 },
-
-    { "idPasseio": 4, "idDestino": 2, "nomeAtracao": "MASP", "localizacao": "Av. Paulista, 1578 - Bela Vista", "duracaoMinutos": 150, "precoIngresso": 75.00, "diaFechado": 1 },
-    { "idPasseio": 5, "idDestino": 2, "nomeAtracao": "Mercado Municipal", "localizacao": "Rua da Cantareira, 306 - Centro", "duracaoMinutos": 120, "precoIngresso": 0.00, "diaFechado": null },
-    { "idPasseio": 6, "idDestino": 2, "nomeAtracao": "Pinacoteca", "localizacao": "Praça da Luz, 2 - Luz", "duracaoMinutos": 120, "precoIngresso": 30.00, "diaFechado": 1 },
-
-    { "idPasseio": 7, "idDestino": 3, "nomeAtracao": "Elevador Lacerda e Pelourinho", "localizacao": "Praça Tomé de Souza - Centro Histórico", "duracaoMinutos": 180, "precoIngresso": 0.00, "diaFechado": null },
-    { "idPasseio": 8, "idDestino": 3, "nomeAtracao": "Museu Farol da Barra", "localizacao": "Largo do Farol da Barra", "duracaoMinutos": 90, "precoIngresso": 15.00, "diaFechado": 1 },
-    { "idPasseio": 9, "idDestino": 3, "nomeAtracao": "Passeio de escuna às ilhas", "localizacao": "Terminal Náutico da Bahia", "duracaoMinutos": 480, "precoIngresso": 140.00, "diaFechado": null },
-
-    { "idPasseio": 10, "idDestino": 4, "nomeAtracao": "Trilha da Lagoinha do Leste", "localizacao": "Pântano do Sul", "duracaoMinutos": 300, "precoIngresso": 0.00, "diaFechado": null },
-    { "idPasseio": 11, "idDestino": 4, "nomeAtracao": "Passeio de barco à Ilha do Campeche", "localizacao": "Praia da Armação", "duracaoMinutos": 360, "precoIngresso": 120.00, "diaFechado": null },
-
-    { "idPasseio": 12, "idDestino": 5, "nomeAtracao": "Cataratas do Iguaçu (lado brasileiro)", "localizacao": "Parque Nacional do Iguaçu", "duracaoMinutos": 240, "precoIngresso": 106.00, "diaFechado": null },
-    { "idPasseio": 13, "idDestino": 5, "nomeAtracao": "Parque das Aves", "localizacao": "Av. das Cataratas, km 17", "duracaoMinutos": 150, "precoIngresso": 85.00, "diaFechado": null },
-    { "idPasseio": 14, "idDestino": 5, "nomeAtracao": "Usina de Itaipu - Visita Panorâmica", "localizacao": "Av. Tancredo Neves, 6702", "duracaoMinutos": 120, "precoIngresso": 52.00, "diaFechado": null },
-
-    { "idPasseio": 15, "idDestino": 6, "nomeAtracao": "Lago Negro", "localizacao": "Rua A. J. Renner - Planalto", "duracaoMinutos": 90, "precoIngresso": 0.00, "diaFechado": null },
-    { "idPasseio": 16, "idDestino": 6, "nomeAtracao": "Snowland", "localizacao": "RS-235, 3100", "duracaoMinutos": 240, "precoIngresso": 290.00, "diaFechado": null },
-    { "idPasseio": 17, "idDestino": 6, "nomeAtracao": "Mini Mundo", "localizacao": "Rua Horácio Cardoso, 291", "duracaoMinutos": 90, "precoIngresso": 70.00, "diaFechado": null },
-
-    { "idPasseio": 18, "idDestino": 7, "nomeAtracao": "Instituto Ricardo Brennand", "localizacao": "Alameda Antônio Brennand - Várzea", "duracaoMinutos": 180, "precoIngresso": 60.00, "diaFechado": 1 },
-    { "idPasseio": 19, "idDestino": 7, "nomeAtracao": "Paço do Frevo", "localizacao": "Praça do Arsenal - Recife Antigo", "duracaoMinutos": 90, "precoIngresso": 20.00, "diaFechado": 1 },
-
-    { "idPasseio": 20, "idDestino": 8, "nomeAtracao": "Conjunto Moderno da Pampulha", "localizacao": "Av. Otacílio Negrão de Lima", "duracaoMinutos": 180, "precoIngresso": 10.00, "diaFechado": 1 },
-    { "idPasseio": 21, "idDestino": 8, "nomeAtracao": "Mercado Central", "localizacao": "Av. Augusto de Lima, 744 - Centro", "duracaoMinutos": 120, "precoIngresso": 0.00, "diaFechado": null },
-
-    { "idPasseio": 22, "idDestino": 9, "nomeAtracao": "Beach Park", "localizacao": "Rua Porto das Dunas, 2734 - Aquiraz", "duracaoMinutos": 420, "precoIngresso": 280.00, "diaFechado": null },
-    { "idPasseio": 23, "idDestino": 9, "nomeAtracao": "Centro Dragão do Mar", "localizacao": "Rua Dragão do Mar, 81 - Praia de Iracema", "duracaoMinutos": 120, "precoIngresso": 0.00, "diaFechado": 1 },
-
-    { "idPasseio": 24, "idDestino": 10, "nomeAtracao": "Teatro Amazonas", "localizacao": "Largo de São Sebastião - Centro", "duracaoMinutos": 60, "precoIngresso": 40.00, "diaFechado": 1 },
-    { "idPasseio": 25, "idDestino": 10, "nomeAtracao": "Encontro das Águas (barco)", "localizacao": "Porto de Manaus", "duracaoMinutos": 360, "precoIngresso": 180.00, "diaFechado": null }
+    {
+        "idPasseio": 1,
+        "idDestino": 1,
+        "nomeAtracao": "Museu do Amanhã",
+        "categoria": "Museu",
+        "localizacao": "Praça Mauá, Centro",
+        "duracaoMinutos": 120,
+        "precoIngresso": 30,
+        "etiquetas": [
+            "Museu",
+            "Cultura"
+        ],
+        "fotos": [
+            "fotos/museu1.jpg",
+            "fotos/museu2.jpg",
+            "fotos/museu3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 2,
+        "idDestino": 1,
+        "nomeAtracao": "Trem do Corcovado e Cristo Redentor",
+        "categoria": "Ponto turístico",
+        "localizacao": "Cosme Velho",
+        "duracaoMinutos": 180,
+        "precoIngresso": 105,
+        "etiquetas": [
+            "Ponto turístico",
+            "Mirante"
+        ],
+        "fotos": [
+            "fotos/cristo2.jpg",
+            "fotos/cristo1.jpg",
+            "fotos/cristo3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 3,
+        "idDestino": 1,
+        "nomeAtracao": "Bondinho do Pão de Açúcar",
+        "categoria": "Ponto turístico",
+        "localizacao": "Praia Vermelha, Urca",
+        "duracaoMinutos": 150,
+        "precoIngresso": 195,
+        "etiquetas": [
+            "Ponto turístico",
+            "Mirante"
+        ],
+        "fotos": [
+            "fotos/pao1.jpg",
+            "fotos/pao2.jpg",
+            "fotos/pao3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 4,
+        "idDestino": 1,
+        "nomeAtracao": "Trilha da Pedra da Gávea com guia",
+        "categoria": "Trilha",
+        "localizacao": "Parque Nacional da Tijuca, Barra da Tijuca",
+        "duracaoMinutos": 360,
+        "precoIngresso": 120,
+        "nivel": "Trilha difícil",
+        "etiquetas": [
+            "Trilha",
+            "Natureza",
+            "Aventura"
+        ],
+        "fotos": [
+            "fotos/gavea1.jpg",
+            "fotos/gavea2.jpg",
+            "fotos/gavea3.jpg"
+        ],
+        "diaFechado": null
+    }
 ]

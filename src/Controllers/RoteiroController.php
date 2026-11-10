@@ -3,6 +3,9 @@
 namespace Controllers;
 
 use Exceptions\RegraNegocioException;
+use Exceptions\DadosInvalidosException;
+use Exceptions\OperacaoNaoPermitidaException;
+use Exceptions\RegistroNaoEncontradoException;
 use Models\Destino;
 use Models\GuiaTuristico;
 use Models\Hospedagem;
@@ -10,6 +13,8 @@ use Models\ItemRoteiro;
 use Models\Passeio;
 use Models\Roteiro;
 use Models\Transporte;
+use Models\VeiculoPessoal;
+use Services\ApiHospedagemSimulada;
 use Session\Session;
 use Utils\Formatador;
 use Utils\Validador;
@@ -36,10 +41,6 @@ class RoteiroController extends Controller
 
     private const VALIDADES_LINK =['7' => '7 dias', '30' => '30 dias', '90' => '90 dias', '0' => 'Sem expiração'];
 
-    // ------------------------------------------------------------------
-    // Listagem (RF05/RF08)
-    // ------------------------------------------------------------------
-
     public static function getLista(): string
     {
         $obUsuario = self::exigirAutenticacao();
@@ -55,11 +56,6 @@ class RoteiroController extends Controller
         ], 'roteiros', 'Meus roteiros');
     }
 
-    /**
-     * Cards de roteiro (usados também na página inicial).
-     *
-     * @param Roteiro[] $roteiros
-     */
     public static function getCardsRoteiros(array $roteiros): string
     {
         $variaveis = array_map(fn(Roteiro $obRoteiro) => [
@@ -81,14 +77,14 @@ class RoteiroController extends Controller
 
     private static function getBadgeRoteiro(Roteiro $obRoteiro): string
     {
-        return $obRoteiro->isFinalizado()
-            ? '<span class="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Finalizado</span>'
-            : '<span class="inline-flex shrink-0 items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">Rascunho</span>';
-    }
+        $cores = match($obRoteiro->getStatus()){
+            Roteiro::STATUS_PRONTO_PARA_VIAJAR => 'bg-[#e6edfa] text-navy-3',
+            Roteiro::STATUS_VIAGEM_REALIZADA   => 'bg-ok-suave text-ok',
+            default                            => 'bg-laranja-suave text-laranja-escuro',
+        };
 
-    // ------------------------------------------------------------------
-    // Criação (RF05 / RN01 / RN05)
-    // ------------------------------------------------------------------
+        return '<span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ' . $cores . '">' . self::e($obRoteiro->getStatus()) . '</span>';
+    }
 
     public static function getNovo(): string
     {
@@ -99,17 +95,26 @@ class RoteiroController extends Controller
 
     public static function postNovo(): string
     {
-        $obUsuario = self::exigirAutenticacao();
+        $obUsuario    = self::exigirAutenticacao();
+        $vemDoInicio  = ($_POST['origemFormulario'] ?? '') === 'inicio';
+        $dados        = $_POST;
 
-        $erros = Roteiro::validarDados($_POST);
-        if(!empty($erros)){
-            return self::renderizarFormularioNovo($_POST, $erros);
+        if($vemDoInicio){
+            $obDestino         = Destino::buscarPorCidade(explode(' - ', (string) ($dados['destino'] ?? ''))[0]);
+            $dados['destinos'] = $obDestino instanceof Destino ? [$obDestino->getIdDestino()] : [];
         }
 
-        $obRoteiro = Roteiro::criar($obUsuario->getIdUsuario(), $_POST);
+        $erros = Roteiro::validarDados($dados);
+        if(!empty($erros)){
+            return $vemDoInicio
+                ? UsuarioController::renderizarHome($_POST, $erros)
+                : self::renderizarFormularioNovo($_POST, $erros);
+        }
 
-        Session::setFlash('sucesso', 'Roteiro criado! Agora adicione transporte, hospedagem, guias e passeios — o valor total é calculado automaticamente.');
-        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
+        $obRoteiro = Roteiro::criar($obUsuario->getIdUsuario(), $dados);
+
+        Session::setFlash('sucesso', 'Roteiro "' . $obRoteiro->getTitulo() . '" criado! Comece escolhendo o transporte, ou pule esta etapa e complete depois.');
+        self::redirecionar('/transporte?roteiro=' . $obRoteiro->getIdRoteiro());
     }
 
     private static function renderizarFormularioNovo(array $valores, array $erros): string
@@ -137,10 +142,6 @@ class RoteiroController extends Controller
 
         return ViewRenderer::getLista($variaveis, self::$pathComponentesRoteiro, 'checkbox-destino.php');
     }
-
-    // ------------------------------------------------------------------
-    // Edição do roteiro / carrinho (RF06, RF07, RF09)
-    // ------------------------------------------------------------------
 
     public static function getEditar(): string
     {
@@ -201,11 +202,8 @@ class RoteiroController extends Controller
     {
         $obRoteiro = self::getRoteiroDoPost();
 
-        $validade      = array_key_exists($_POST['validade'] ?? '', self::VALIDADES_LINK) ? (int) $_POST['validade'] : 30;
-        $dataExpiracao = $validade > 0 ? (new \DateTime('+' . $validade . ' days'))->format('Y-m-d 23:59:59') : null;
-
         try{
-            $obRoteiro->finalizar($dataExpiracao);
+            $obRoteiro->concluir();
             $obRoteiro->salvar();
             Session::setFlash('sucesso', 'Roteiro finalizado! O link somente leitura já pode ser compartilhado.');
         }catch(RegraNegocioException $e){
@@ -230,10 +228,6 @@ class RoteiroController extends Controller
         self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '#compartilhar');
     }
 
-    // ------------------------------------------------------------------
-    // Itens do roteiro
-    // ------------------------------------------------------------------
-
     public static function postAdicionarItem(): void
     {
         $obUsuario = self::exigirAutenticacao();
@@ -247,6 +241,11 @@ class RoteiroController extends Controller
 
         try{
             $obItem = self::criarItem($_POST);
+
+            if(in_array($obItem->getTipoServico(), [ItemRoteiro::TIPO_TRANSPORTE, ItemRoteiro::TIPO_HOSPEDAGEM], true)){
+                self::removerItensDoTipo($obRoteiro, $obItem->getTipoServico());
+            }
+
             $obRoteiro->adicionarServico($obItem);
             $obRoteiro->salvar();
 
@@ -261,6 +260,67 @@ class RoteiroController extends Controller
         }
 
         self::redirecionar($voltar);
+    }
+
+    private static function removerItensDoTipo(Roteiro $obRoteiro, string $tipoServico): void
+    {
+        foreach($obRoteiro->getItens() as $obItem){
+            if($obItem->getTipoServico() === $tipoServico){
+                $obRoteiro->removerServico($obItem->getIdItem());
+            }
+        }
+    }
+
+    public static function postAdicionarVeiculo(): void
+    {
+        $obRoteiro = self::getRoteiroDoPost();
+        $voltar    = self::urlInterna($_POST['voltar'] ?? null, BuscaController::getUrlEtapa($obRoteiro, 'Transporte'));
+        $trechos   = empty($_POST['idaVolta']) ? 1 : 2;
+        $destinos  = $obRoteiro->getDestinos();
+
+        try{
+            $obVeiculo = new VeiculoPessoal(
+                (string) ($_POST['tipoVeiculo'] ?? ''),
+                (string) ($_POST['combustivel'] ?? ''),
+                (float) ($_POST['distancia'] ?? 0) * $trechos,
+                (float) ($_POST['consumo'] ?? 0),
+                (float) ($_POST['precoCombustivel'] ?? 0),
+                (float) ($_POST['pedagios'] ?? 0) * $trechos,
+                $obRoteiro->getOrigem() ?: 'Origem',
+                isset($destinos[0]) ? $destinos[0]->getCidade() . ' - ' . $destinos[0]->getEstado() : 'Destino',
+                $obRoteiro->getDataInicio() . ' 06:00:00'
+            );
+
+            $obItem = ItemRoteiro::criarDeServico($obVeiculo, $obRoteiro->getDataInicio(), $obRoteiro->getQuantidadePessoas(), null, '06:00');
+
+            self::removerItensDoTipo($obRoteiro, ItemRoteiro::TIPO_TRANSPORTE);
+            $obRoteiro->adicionarServico($obItem);
+            $obRoteiro->salvar();
+
+            Session::setFlash('sucesso', sprintf('Estimativa de %s adicionada ao roteiro: %s.', $obVeiculo->getTipoVeiculo(), self::moeda($obItem->getSubtotal())));
+        }catch(RegraNegocioException $e){
+            Session::setFlash('erro', $e->getMessage());
+        }
+
+        self::redirecionar($voltar);
+    }
+
+    public static function postAvancarEtapa(): void
+    {
+        $obRoteiro    = self::getRoteiroDoPost();
+        $etapaDaTela  = (string) ($_POST['etapa'] ?? '');
+        $posicao      = array_search($etapaDaTela, Roteiro::ETAPAS, true);
+
+        if($posicao === false or $posicao === count(Roteiro::ETAPAS) - 1){
+            self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
+        }
+
+        if($obRoteiro->getEtapaAtual() === $etapaDaTela){
+            $obRoteiro->avancarEtapa();
+            $obRoteiro->salvar();
+        }
+
+        self::redirecionar(BuscaController::getUrlEtapa($obRoteiro, Roteiro::ETAPAS[$posicao + 1]));
     }
 
     public static function postRemoverItem(): void
@@ -291,7 +351,7 @@ class RoteiroController extends Controller
 
         try{
             if(!Validador::inteiroEntre($_POST['quantidade'] ?? '', 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
-                throw new RegraNegocioException('Informe uma quantidade de pessoas entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.');
+                throw new DadosInvalidosException('Informe uma quantidade de pessoas entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.');
             }
 
             $obRoteiro->atualizarQuantidadeItem($idItem, (int) $_POST['quantidade']);
@@ -304,15 +364,11 @@ class RoteiroController extends Controller
         self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '#item-' . $idItem);
     }
 
-    /**
-     * Cria o ItemRoteiro a partir do serviço escolhido na busca. O serviço é
-     * sempre recarregado no servidor (nunca confiamos no preço vindo do formulário).
-     */
     private static function criarItem(array $dados): ItemRoteiro
     {
         $pessoas = $dados['pessoas'] ?? 1;
         if(!Validador::inteiroEntre($pessoas, 1, ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS)){
-            throw new RegraNegocioException('Informe uma quantidade de pessoas entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.');
+            throw new DadosInvalidosException('Informe uma quantidade de pessoas entre 1 e ' . ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS . '.');
         }
 
         $pessoas = (int) $pessoas;
@@ -322,7 +378,7 @@ class RoteiroController extends Controller
             ItemRoteiro::TIPO_HOSPEDAGEM => self::criarItemHospedagem($dados, $pessoas),
             ItemRoteiro::TIPO_GUIA       => self::criarItemGuia($dados, $pessoas),
             ItemRoteiro::TIPO_PASSEIO    => self::criarItemPasseio($dados, $pessoas),
-            default                      => throw new RegraNegocioException('Tipo de serviço inválido.')
+            default                      => throw new DadosInvalidosException('Tipo de serviço inválido.')
         };
     }
 
@@ -330,16 +386,16 @@ class RoteiroController extends Controller
     {
         $data = $dados['data'] ?? '';
         if(!Validador::data($data)){
-            throw new RegraNegocioException('A data da viagem é inválida. Refaça a busca.');
+            throw new DadosInvalidosException('A data da viagem é inválida. Refaça a busca.');
         }
 
         $obTransporte = Transporte::buscarPorCodigo($dados['origem'] ?? '', $dados['destino'] ?? '', $data, (string) ($dados['idServico'] ?? ''));
         if(!$obTransporte instanceof Transporte){
-            throw new RegraNegocioException('Essa opção de transporte não está mais disponível. Refaça a busca.');
+            throw new RegistroNaoEncontradoException('Essa opção de transporte não está mais disponível. Refaça a busca.');
         }
 
         if(!$obTransporte->verificarDisponibilidade($obTransporte->getDataHoraPartida(), $pessoas)){
-            throw new RegraNegocioException(sprintf('Não há assentos suficientes para %d pessoa(s) nessa opção, ou a partida já aconteceu.', $pessoas));
+            throw new OperacaoNaoPermitidaException(sprintf('Não há assentos suficientes para %d pessoa(s) nessa opção, ou a partida já aconteceu.', $pessoas));
         }
 
         return ItemRoteiro::criarDeServico(
@@ -357,31 +413,40 @@ class RoteiroController extends Controller
         $saida   = $dados['dataFim'] ?? '';
 
         if(!Validador::data($entrada) or !Validador::data($saida) or $saida <= $entrada){
-            throw new RegraNegocioException('Informe datas de entrada e saída válidas (a saída deve ser depois da entrada).');
+            throw new DadosInvalidosException('Informe datas de entrada e saída válidas (a saída deve ser depois da entrada).');
         }
 
         $obHospedagem = Hospedagem::getPorId((int) ($dados['idServico'] ?? 0));
         if(!$obHospedagem instanceof Hospedagem){
-            throw new RegraNegocioException('Hospedagem não encontrada. Refaça a busca.');
+            throw new RegistroNaoEncontradoException('Hospedagem não encontrada. Refaça a busca.');
         }
 
-        return ItemRoteiro::criarDeServico($obHospedagem, $entrada, $pessoas, $saida);
+        $obOferta = $obHospedagem->obterMenorPreco();
+        foreach($obHospedagem->compararPrecos() as $obOfertaSite){
+            if($obOfertaSite->getNomeSite() === ($dados['site'] ?? '')){
+                $obOferta = $obOfertaSite;
+            }
+        }
+
+        $quarto = ApiHospedagemSimulada::buscarPorId($obHospedagem->getIdHospedagem())['quarto'] ?? $obHospedagem->getTipo();
+
+        return ItemRoteiro::criarDeServico($obHospedagem, $entrada, $pessoas, $saida, null, $obOferta->getPrecoDiaria(), $quarto . ' · via ' . $obOferta->getNomeSite());
     }
 
     private static function criarItemGuia(array $dados, int $pessoas): ItemRoteiro
     {
         $data = $dados['data'] ?? '';
         if(!Validador::data($data)){
-            throw new RegraNegocioException('Escolha a data em que deseja contratar o guia.');
+            throw new DadosInvalidosException('Escolha a data em que deseja contratar o guia.');
         }
 
         $obGuia = GuiaTuristico::getPorId((int) ($dados['idServico'] ?? 0));
         if(!$obGuia instanceof GuiaTuristico or !$obGuia->isAtivo()){
-            throw new RegraNegocioException('Este guia não está disponível para novas reservas.');
+            throw new OperacaoNaoPermitidaException('Este guia não está disponível para novas reservas.');
         }
 
         if(!$obGuia->consultarDisponibilidade($data)){
-            throw new RegraNegocioException(sprintf('%s não atende em %s (%s). Escolha outro dia.', $obGuia->getNome(), Formatador::data($data), strtolower(Formatador::diaSemana($data))));
+            throw new OperacaoNaoPermitidaException(sprintf('%s não atende em %s (%s). Escolha outro dia.', $obGuia->getNome(), Formatador::data($data), strtolower(Formatador::diaSemana($data))));
         }
 
         return ItemRoteiro::criarDeServico($obGuia, $data, $pessoas);
@@ -391,29 +456,21 @@ class RoteiroController extends Controller
     {
         $data = $dados['data'] ?? '';
         if(!Validador::data($data)){
-            throw new RegraNegocioException('Escolha a data do passeio.');
+            throw new DadosInvalidosException('Escolha a data do passeio.');
         }
 
         $obPasseio = Passeio::getPorId((int) ($dados['idServico'] ?? 0));
         if(!$obPasseio instanceof Passeio){
-            throw new RegraNegocioException('Passeio não encontrado. Refaça a busca.');
+            throw new RegistroNaoEncontradoException('Passeio não encontrado. Refaça a busca.');
         }
 
         if(!$obPasseio->verificarDisponibilidade($data)){
-            throw new RegraNegocioException(sprintf('%s fica fechado(a) em %s (%s). Escolha outro dia.', $obPasseio->getNomeAtracao(), Formatador::data($data), strtolower(Formatador::diaSemana($data))));
+            throw new OperacaoNaoPermitidaException(sprintf('%s fica fechado(a) em %s (%s). Escolha outro dia.', $obPasseio->getNomeAtracao(), Formatador::data($data), strtolower(Formatador::diaSemana($data))));
         }
 
         return ItemRoteiro::criarDeServico($obPasseio, $data, $pessoas);
     }
 
-    // ------------------------------------------------------------------
-    // Montagem das partes da página
-    // ------------------------------------------------------------------
-
-    /**
-     * Cronograma dia a dia. Com $editavel = false (link compartilhado) não
-     * exibe nenhum controle de alteração (RN06).
-     */
     public static function getCronogramaHtml(Roteiro $obRoteiro, bool $editavel): string
     {
         $itensPorData = $obRoteiro->getItensPorData();
@@ -426,7 +483,6 @@ class RoteiroController extends Controller
                 $itensHtml .= self::getItemHtml($obRoteiro, $obItem, $editavel);
             }
 
-            // Dias intermediários de uma estadia
             foreach($hospedagens as $obHospedagem){
                 if($data > $obHospedagem->getDataAgendada() and $data < $obHospedagem->getDataFim()){
                     $itensHtml .= '<p class="flex items-center gap-2 px-5 py-3 text-sm text-slate-500">' . Icones::get('cama', 'h-4 w-4 text-orange-500') . 'Hospedado(a) em ' . self::e($obHospedagem->getDescricao()) . '</p>';
@@ -562,10 +618,6 @@ class RoteiroController extends Controller
 
         return $protocolo . '://' . $host . $caminho;
     }
-
-    // ------------------------------------------------------------------
-    // Busca do roteiro garantindo que pertence ao usuário logado
-    // ------------------------------------------------------------------
 
     private static function getRoteiroDoUsuario(int $idUsuario, mixed $idRoteiro): Roteiro
     {

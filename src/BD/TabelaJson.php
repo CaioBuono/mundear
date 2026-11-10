@@ -2,13 +2,8 @@
 
 namespace BD;
 
-/**
- * Acesso genérico às "tabelas" do banco NoSQL (um arquivo JSON por coleção).
- *
- * Cada arquivo src/BD/table_{nome}.json guarda uma lista de documentos.
- * A classe cuida de leitura, geração de id incremental e gravação com trava
- * de arquivo (LOCK_EX) para evitar que duas requisições sobrescrevam dados.
- */
+use Exceptions\PersistenciaException;
+
 class TabelaJson
 {
     private string $caminhoArquivo;
@@ -21,9 +16,6 @@ class TabelaJson
         $this->chavePrimaria  = $chavePrimaria;
     }
 
-    /**
-     * Lista todos os documentos, opcionalmente filtrados por uma função.
-     */
     public function listar(?callable $filtro = null): array
     {
         $registros = $this->ler();
@@ -53,9 +45,6 @@ class TabelaJson
         return null;
     }
 
-    /**
-     * Insere um documento e devolve o id gerado (maior id + 1).
-     */
     public function inserir(array $registro): int
     {
         $registros = $this->ler();
@@ -70,9 +59,6 @@ class TabelaJson
         return $novoId;
     }
 
-    /**
-     * Mescla os dados informados no documento com o id indicado.
-     */
     public function atualizar(int $id, array $dados): bool
     {
         $registros = $this->ler();
@@ -111,7 +97,8 @@ class TabelaJson
         $dados    = json_decode($conteudo === false || trim($conteudo) === '' ? '[]' : $conteudo, true);
 
         if(!is_array($dados)){
-            throw new \RuntimeException('Arquivo de dados inválido: ' . basename($this->caminhoArquivo));
+            error_log('[Mundear] Arquivo de dados inválido: ' . $this->caminhoArquivo);
+            throw new PersistenciaException('Não foi possível carregar os dados agora. Tente novamente em instantes.');
         }
 
         return $dados;
@@ -119,18 +106,19 @@ class TabelaJson
 
     private function salvar(array $registros): void
     {
-        // Caracteres com codificação inválida são substituídos em vez de impedir a gravação
         $json = json_encode(
             array_values($registros),
             JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
         );
 
         if($json === false){
-            throw new \RuntimeException('Falha ao converter ' . basename($this->caminhoArquivo) . ' para JSON: ' . json_last_error_msg());
+            error_log('[Mundear] Falha ao converter para JSON: ' . json_last_error_msg());
+            throw new PersistenciaException('Não foi possível salvar os dados agora. Tente novamente em instantes.');
         }
 
         if(file_put_contents($this->caminhoArquivo, $json . PHP_EOL, LOCK_EX) === false){
-            throw new \RuntimeException('Não foi possível gravar o arquivo ' . basename($this->caminhoArquivo));
+            error_log('[Mundear] Não foi possível gravar ' . $this->caminhoArquivo);
+            throw new PersistenciaException('Não foi possível salvar os dados agora. Tente novamente em instantes.');
         }
     }
 }

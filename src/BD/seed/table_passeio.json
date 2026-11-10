@@ -1,0 +1,80 @@
+[
+    {
+        "idPasseio": 1,
+        "idDestino": 1,
+        "nomeAtracao": "Museu do Amanhã",
+        "categoria": "Museu",
+        "localizacao": "Praça Mauá, Centro",
+        "duracaoMinutos": 120,
+        "precoIngresso": 30.0,
+        "etiquetas": [
+            "Museu",
+            "Cultura"
+        ],
+        "fotos": [
+            "fotos/museu1.jpg",
+            "fotos/museu2.jpg",
+            "fotos/museu3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 2,
+        "idDestino": 1,
+        "nomeAtracao": "Trem do Corcovado e Cristo Redentor",
+        "categoria": "Ponto turístico",
+        "localizacao": "Cosme Velho",
+        "duracaoMinutos": 180,
+        "precoIngresso": 105.0,
+        "etiquetas": [
+            "Ponto turístico",
+            "Mirante"
+        ],
+        "fotos": [
+            "fotos/cristo2.jpg",
+            "fotos/cristo1.jpg",
+            "fotos/cristo3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 3,
+        "idDestino": 1,
+        "nomeAtracao": "Bondinho do Pão de Açúcar",
+        "categoria": "Ponto turístico",
+        "localizacao": "Praia Vermelha, Urca",
+        "duracaoMinutos": 150,
+        "precoIngresso": 195.0,
+        "etiquetas": [
+            "Ponto turístico",
+            "Mirante"
+        ],
+        "fotos": [
+            "fotos/pao1.jpg",
+            "fotos/pao2.jpg",
+            "fotos/pao3.jpg"
+        ],
+        "diaFechado": null
+    },
+    {
+        "idPasseio": 4,
+        "idDestino": 1,
+        "nomeAtracao": "Trilha da Pedra da Gávea com guia",
+        "categoria": "Trilha",
+        "localizacao": "Parque Nacional da Tijuca, Barra da Tijuca",
+        "duracaoMinutos": 360,
+        "precoIngresso": 120.0,
+        "nivel": "Trilha difícil",
+        "etiquetas": [
+            "Trilha",
+            "Natureza",
+            "Aventura"
+        ],
+        "fotos": [
+            "fotos/gavea1.jpg",
+            "fotos/gavea2.jpg",
+            "fotos/gavea3.jpg"
+        ],
+        "diaFechado": null
+    }
+]

@@ -19,9 +19,16 @@ class GuiaTuristico implements ServicoRoteiro
 
     private string $cidadeAtuacao = '';
 
+    private string $email = '';
+
+    private string $idiomas = '';
+
+    private string $regioes = '';
+
+    private string $apresentacao = '';
+
     private float $valorDiaria = 0;
 
-    /** Dia da semana sem atendimento (0 = domingo ... 6 = sábado) ou null. */
     private ?int $diaFolga = null;
 
     private bool $ativo = true;
@@ -41,19 +48,16 @@ class GuiaTuristico implements ServicoRoteiro
     public function getValorDiaria(): float { return $this->valorDiaria; }
     public function getDiaFolga(): ?int { return $this->diaFolga; }
     public function isAtivo(): bool { return $this->ativo; }
+    public function getEmail(): string { return $this->email; }
+    public function getIdiomas(): string { return $this->idiomas; }
+    public function getRegioes(): string { return $this->regioes; }
+    public function getApresentacao(): string { return $this->apresentacao; }
 
     public function setAtivo(bool $ativo): void
     {
         $this->ativo = $ativo;
     }
 
-    // ------------------------------------------------------------------
-    // Métodos do diagrama de classes
-    // ------------------------------------------------------------------
-
-    /**
-     * O guia está disponível se estiver ativo e a data não cair no seu dia de folga.
-     */
     public function consultarDisponibilidade(string $data): bool
     {
         if(!$this->ativo) return false;
@@ -78,23 +82,12 @@ class GuiaTuristico implements ServicoRoteiro
         return $this->diaFolga === null ? 'Atende todos os dias' : 'Folga: ' . Formatador::nomeDiaSemana($this->diaFolga);
     }
 
-    // ------------------------------------------------------------------
-    // ServicoRoteiro
-    // ------------------------------------------------------------------
-
     public function getTipoServico(): string { return ItemRoteiro::TIPO_GUIA; }
     public function getIdServico(): int|string { return (int) $this->idGuia; }
     public function getNomeServico(): string { return 'Guia ' . $this->nome; }
     public function getDetalhesServico(): string { return $this->especialidade . ' · ' . $this->cidadeAtuacao . ' · ' . Formatador::telefone($this->telefone); }
     public function getValorUnitario(): float { return $this->valorDiaria; }
 
-    // ------------------------------------------------------------------
-    // Persistência (RF10 — CRUD feito pelo Administrador)
-    // ------------------------------------------------------------------
-
-    /**
-     * RN05: lista de mensagens de erro para os dados informados (vazia = válido).
-     */
     public static function validarDados(array $dados): array
     {
         $erros = [];
@@ -104,6 +97,9 @@ class GuiaTuristico implements ServicoRoteiro
         if(trim($dados['especialidade'] ?? '') === '')        $erros[] = 'Informe a especialidade do guia.';
         if(!Destino::buscarPorCidade($dados['cidadeAtuacao'] ?? '')) $erros[] = 'Selecione uma cidade de atuação válida.';
         if(!Validador::decimalPositivo(str_replace(',', '.', $dados['valorDiaria'] ?? ''))) $erros[] = 'Informe um valor de diária maior que zero.';
+
+        $email = trim($dados['email'] ?? '');
+        if($email !== '' and !Validador::email($email)) $erros[] = 'Informe um e-mail válido para o guia.';
 
         $diaFolga = $dados['diaFolga'] ?? '';
         if($diaFolga !== '' and !Validador::inteiroEntre($diaFolga, 0, 6)) $erros[] = 'Dia de folga inválido.';
@@ -122,6 +118,10 @@ class GuiaTuristico implements ServicoRoteiro
         $this->valorDiaria   = round((float) str_replace(',', '.', $dados['valorDiaria']), 2);
         $this->diaFolga      = $diaFolga === '' ? null : (int) $diaFolga;
         $this->ativo         = !empty($dados['ativo']);
+        $this->email         = strtolower(trim($dados['email'] ?? ''));
+        $this->idiomas       = trim($dados['idiomas'] ?? '');
+        $this->regioes       = trim($dados['regioes'] ?? '');
+        $this->apresentacao  = trim($dados['apresentacao'] ?? '');
     }
 
     public function salvar(): bool
@@ -140,28 +140,25 @@ class GuiaTuristico implements ServicoRoteiro
         return $this->idGuia !== null && self::getTabela()->excluir($this->idGuia);
     }
 
-    // ------------------------------------------------------------------
-    // Consultas (RF04)
-    // ------------------------------------------------------------------
-
     public static function getPorId(int $idGuia): ?GuiaTuristico
     {
         $registro = self::getTabela()->buscarPorId($idGuia);
         return $registro ? self::criar($registro) : null;
     }
 
-    /**
-     * Pesquisa por localidade (e, opcionalmente, especialidade).
-     *
-     * @return GuiaTuristico[]
-     */
-    public static function pesquisar(string $cidade = '', string $especialidade = '', ?bool $ativo = true): array
+    public static function pesquisar(string $cidade = '', string $termo = '', ?bool $ativo = true): array
     {
-        $registros = self::getTabela()->listar(function($guia) use ($cidade, $especialidade, $ativo){
-            if($ativo !== null and (bool) $guia['ativo'] !== $ativo)                   return false;
-            if($cidade !== '' and !Texto::contem($guia['cidadeAtuacao'], $cidade))      return false;
-            if($especialidade !== '' and !Texto::contem($guia['especialidade'], $especialidade)) return false;
-            return true;
+        $registros = self::getTabela()->listar(function($guia) use ($cidade, $termo, $ativo){
+            if($ativo !== null and (bool) $guia['ativo'] !== $ativo)              return false;
+            if($cidade !== '' and !Texto::contem($guia['cidadeAtuacao'], $cidade)) return false;
+            if($termo === '')                                                       return true;
+
+            $camposPesquisados = [$guia['nome'], $guia['especialidade'], $guia['idiomas'] ?? '', $guia['regioes'] ?? ''];
+            foreach($camposPesquisados as $campo){
+                if(Texto::contem($campo, $termo)) return true;
+            }
+
+            return false;
         });
 
         usort($registros, fn($a, $b) => [$a['cidadeAtuacao'], $a['nome']] <=> [$b['cidadeAtuacao'], $b['nome']]);
@@ -181,6 +178,10 @@ class GuiaTuristico implements ServicoRoteiro
         $obGuia->diaFolga      = isset($registro['diaFolga']) ? (int) $registro['diaFolga'] : null;
         $obGuia->ativo         = (bool) ($registro['ativo'] ?? true);
         $obGuia->dataCadastro  = $registro['dataCadastro'] ?? null;
+        $obGuia->email         = $registro['email'] ?? '';
+        $obGuia->idiomas       = $registro['idiomas'] ?? '';
+        $obGuia->regioes       = $registro['regioes'] ?? '';
+        $obGuia->apresentacao  = $registro['apresentacao'] ?? '';
 
         return $obGuia;
     }
@@ -196,7 +197,11 @@ class GuiaTuristico implements ServicoRoteiro
             'valorDiaria'   => $this->valorDiaria,
             'diaFolga'      => $this->diaFolga,
             'ativo'         => $this->ativo,
-            'dataCadastro'  => $this->dataCadastro
+            'dataCadastro'  => $this->dataCadastro,
+            'email'         => $this->email,
+            'idiomas'       => $this->idiomas,
+            'regioes'       => $this->regioes,
+            'apresentacao'  => $this->apresentacao
         ];
     }
 }

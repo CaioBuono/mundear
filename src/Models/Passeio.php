@@ -4,6 +4,7 @@ namespace Models;
 
 use BD\TabelaJson;
 use Utils\Formatador;
+use Utils\Texto;
 
 class Passeio implements ServicoRoteiro
 {
@@ -13,13 +14,14 @@ class Passeio implements ServicoRoteiro
 
     private string $nomeAtracao;
 
+    private string $categoria;
+
     private string $localizacao;
 
     private int $duracaoMinutos;
 
     private float $precoIngresso;
 
-    /** Dia da semana em que a atração fecha (0 = domingo ... 6 = sábado) ou null. */
     private ?int $diaFechado = null;
 
     private static function getTabela(): TabelaJson
@@ -30,6 +32,7 @@ class Passeio implements ServicoRoteiro
     public function getIdPasseio(): int { return $this->idPasseio; }
     public function getIdDestino(): int { return $this->idDestino; }
     public function getNomeAtracao(): string { return $this->nomeAtracao; }
+    public function getCategoria(): string { return $this->categoria; }
     public function getLocalizacao(): string { return $this->localizacao; }
     public function getDuracaoMinutos(): int { return $this->duracaoMinutos; }
     public function getPrecoIngresso(): float { return $this->precoIngresso; }
@@ -61,7 +64,6 @@ class Passeio implements ServicoRoteiro
         return $this->diaFechado === null ? 'Aberto todos os dias' : 'Fechado: ' . Formatador::nomeDiaSemana($this->diaFechado);
     }
 
-    // ServicoRoteiro
     public function getTipoServico(): string { return ItemRoteiro::TIPO_PASSEIO; }
     public function getIdServico(): int|string { return $this->idPasseio; }
     public function getNomeServico(): string { return $this->nomeAtracao; }
@@ -74,9 +76,6 @@ class Passeio implements ServicoRoteiro
         return $registro ? self::criar($registro) : null;
     }
 
-    /**
-     * @return Passeio[]
-     */
     public static function listarPorDestino(int $idDestino): array
     {
         return array_map(
@@ -85,12 +84,31 @@ class Passeio implements ServicoRoteiro
         );
     }
 
+    public static function pesquisar(string $termo, string $cidade): array
+    {
+        $obDestino = Destino::buscarPorCidade($cidade);
+        if(!$obDestino instanceof Destino){
+            return [];
+        }
+
+        $passeios = array_filter(
+            self::listarPorDestino($obDestino->getIdDestino()),
+            fn(Passeio $obPasseio) => $termo === ''
+                || Texto::contem($obPasseio->nomeAtracao, $termo)
+                || Texto::contem($obPasseio->categoria, $termo)
+                || Texto::contem($obPasseio->localizacao, $termo)
+        );
+
+        return array_values($passeios);
+    }
+
     private static function criar(array $registro): Passeio
     {
         $obPasseio                 = new Passeio();
         $obPasseio->idPasseio      = (int) $registro['idPasseio'];
         $obPasseio->idDestino      = (int) $registro['idDestino'];
         $obPasseio->nomeAtracao    = $registro['nomeAtracao'];
+        $obPasseio->categoria      = $registro['categoria'] ?? 'Atração';
         $obPasseio->localizacao    = $registro['localizacao'];
         $obPasseio->duracaoMinutos = (int) $registro['duracaoMinutos'];
         $obPasseio->precoIngresso  = (float) $registro['precoIngresso'];

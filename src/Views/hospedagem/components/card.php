@@ -1,36 +1,39 @@
-<article class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-    <div class="flex h-28 items-center justify-center bg-gradient-to-br from-orange-100 via-amber-50 to-blue-50 text-orange-500">
-        {{iconeCama}}
-    </div>
+<article class="cartao border-l-4 border-l-(--mc) !p-0" style="{{cores}}">
+    <div class="grid items-center gap-5 py-3.5 pl-3.5 pr-[18px] md:grid-cols-[220px_minmax(0,1fr)_auto]">
+        {{galeria}}
 
-    <div class="flex flex-1 flex-col p-5">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <span class="inline-flex rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-700">{{tipo}}</span>
-                <h3 class="mt-2 font-semibold text-blue-950">{{nome}}</h3>
-            </div>
-            <span class="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-sm font-semibold text-slate-700">
-                {{iconeEstrela}} {{avaliacao}}
-            </span>
+        <div class="min-w-0">
+            <h3 class="text-[16.5px] font-bold">{{nome}}</h3>
+            <div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-[13px] text-apagado">{{iconePin}}{{local}} · <span class="text-[13px] font-bold text-laranja-escuro">★ {{nota}}</span></div>
+            <div class="dica mt-0.5">{{quarto}}</div>
+            <div class="mt-2 flex flex-wrap gap-1.5">{{comodidades}}</div>
         </div>
 
-        <p class="mt-2 flex items-start gap-1.5 text-sm text-slate-500">{{iconePin}} {{endereco}} · {{cidade}}</p>
-
-        <div class="mt-auto pt-5">
-            <div class="flex items-end justify-between gap-3 border-t border-slate-100 pt-4">
-                <div>
-                    <p class="text-xs text-slate-500">{{resumoEstadia}}</p>
-                    <p class="text-sm text-slate-500"><span class="font-semibold text-blue-950">{{precoDiaria}}</span> / diária</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-slate-500">Subtotal</p>
-                    <p class="text-xl font-bold text-orange-500">{{subtotal}}</p>
-                </div>
+        <div class="flex flex-col items-start gap-2 md:items-end">
+            <span class="text-[11.5px] font-semibold text-apagado">menor preço em {{siteMenor}}</span>
+            <span class="font-display text-[21px] font-extrabold leading-tight text-(--mc)">{{total}}</span>
+            <span class="text-xs text-apagado md:text-right">{{porNoite}}</span>
+            <div class="flex flex-wrap gap-2 md:justify-end">
+                <button type="button" class="btn-secundario group" data-alternar="{{idComparar}}" aria-expanded="false">Comparar {{quantidadeSites}} sites{{iconeBaixo}}</button>
+                {{botao}}
             </div>
+        </div>
+    </div>
 
-            <div class="mt-4">
-                {{formAdicionar}}
-            </div>
+    <div id="{{idComparar}}" class="rounded-b-xl border-t border-linha bg-[#f8fafc] px-[18px] pb-3 pt-1.5" hidden>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[560px] border-collapse text-sm">
+                <thead>
+                    <tr class="text-left text-[11.5px] font-bold uppercase tracking-[.06em] text-apagado">
+                        <th class="px-2 pb-1.5 pt-2.5">Site</th>
+                        <th class="px-2 pb-1.5 pt-2.5 text-right">Por noite</th>
+                        <th class="px-2 pb-1.5 pt-2.5 text-right">Total ({{textoNoites}})</th>
+                        <th class="px-2 pb-1.5 pt-2.5 text-right">Diferença</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>{{linhasComparacao}}</tbody>
+            </table>
         </div>
     </div>
 </article>

@@ -36,18 +36,12 @@ class Session
         return ($_SESSION['usuario']['perfil'] ?? '') === Usuario::PERFIL_ADMINISTRADOR;
     }
 
-    /**
-     * Limpa os dados da sessão e gera um novo id (usado no logout e no RN08).
-     */
     public static function encerrar(): void
     {
         $_SESSION = [];
         session_regenerate_id(true);
     }
 
-    /**
-     * Mantém a sessão por 30 dias (opção "Lembrar de mim").
-     */
     public static function lembrarUsuario(): void
     {
         setcookie(session_name(), session_id(), [
@@ -58,9 +52,6 @@ class Session
         ]);
     }
 
-    /**
-     * Mensagem exibida uma única vez na próxima página (padrão "flash message").
-     */
     public static function setFlash(string $tipo, string $mensagem, ?string $link = null, ?string $textoLink = null): void
     {
         $_SESSION['flash'] = ['tipo' => $tipo, 'mensagem' => $mensagem, 'link' => $link, 'textoLink' => $textoLink];
@@ -74,9 +65,6 @@ class Session
         return $flash;
     }
 
-    /**
-     * Token anti-CSRF incluído automaticamente em todos os formulários ({{csrf}}).
-     */
     public static function getTokenCsrf(): string
     {
         if(empty($_SESSION['csrf'])){

@@ -4,7 +4,6 @@
     <span class="text-slate-700">{{titulo}}</span>
 </nav>
 
-<!-- CABEÇALHO -->
 <div class="flex flex-wrap items-center gap-3">
     <h1 class="text-2xl font-bold text-blue-950 sm:text-3xl">{{titulo}}</h1>
     {{status}}
@@ -16,7 +15,6 @@
 
 <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
     <div class="min-w-0 space-y-6">
-        <!-- ADICIONAR SERVIÇOS -->
         <section class="cartao">
             <h2 class="text-lg font-semibold text-blue-950">Adicionar serviços</h2>
             <p class="text-sm text-slate-500">Pesquise e vincule opções a este roteiro. O valor total é recalculado a cada inclusão ou remoção.</p>
@@ -30,18 +28,17 @@
                     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600">{{iconeCama}}</span>
                     Hospedagem
                 </a>
-                <a href="/turismo?roteiro={{id}}#guias" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-emerald-300 hover:bg-emerald-50">
+                <a href="/turismo?roteiro={{id}}&modo=guias" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-emerald-300 hover:bg-emerald-50">
                     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">{{iconeGuia}}</span>
                     Guias
                 </a>
-                <a href="/turismo?roteiro={{id}}#passeios" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-violet-300 hover:bg-violet-50">
+                <a href="/turismo?roteiro={{id}}&modo=passeios" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-violet-300 hover:bg-violet-50">
                     <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-700">{{iconeIngresso}}</span>
                     Passeios
                 </a>
             </div>
         </section>
 
-        <!-- CRONOGRAMA -->
         <section>
             <div class="mb-3 flex items-end justify-between gap-3">
                 <div>
@@ -55,7 +52,6 @@
             </div>
         </section>
 
-        <!-- EDITAR DADOS DA VIAGEM -->
         <details class="cartao group">
             <summary class="flex cursor-pointer list-none items-center justify-between font-semibold text-blue-950">
                 Editar dados da viagem
@@ -98,7 +94,6 @@
         </details>
     </div>
 
-    <!-- RESUMO / CARRINHO -->
     <aside class="space-y-6 lg:sticky lg:top-24 lg:self-start">
         <section class="cartao">
             <p class="text-sm text-slate-500">Valor total estimado</p>

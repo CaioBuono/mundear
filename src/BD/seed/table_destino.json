@@ -1,0 +1,68 @@
+[
+    {
+        "idDestino": 1,
+        "cidade": "Rio de Janeiro",
+        "estado": "RJ",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 2,
+        "cidade": "São Paulo",
+        "estado": "SP",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 3,
+        "cidade": "Salvador",
+        "estado": "BA",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 4,
+        "cidade": "Florianópolis",
+        "estado": "SC",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 5,
+        "cidade": "Foz do Iguaçu",
+        "estado": "PR",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 6,
+        "cidade": "Gramado",
+        "estado": "RS",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 7,
+        "cidade": "Recife",
+        "estado": "PE",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 8,
+        "cidade": "Belo Horizonte",
+        "estado": "MG",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 9,
+        "cidade": "Fortaleza",
+        "estado": "CE",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 10,
+        "cidade": "Manaus",
+        "estado": "AM",
+        "pais": "Brasil"
+    },
+    {
+        "idDestino": 11,
+        "cidade": "Ubatuba",
+        "estado": "SP",
+        "pais": "Brasil"
+    }
+]

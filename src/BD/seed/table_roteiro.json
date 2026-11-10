@@ -1,0 +1,232 @@
+[
+    {
+        "idRoteiro": 1,
+        "idUsuario": 4,
+        "titulo": "Férias no Rio",
+        "dataInicio": "2026-12-11",
+        "dataFim": "2026-12-14",
+        "origem": "Birigui - SP",
+        "quantidadePessoas": 2,
+        "orcamento": 2000.0,
+        "etapaAtual": "Revisão",
+        "idDestinos": [
+            1
+        ],
+        "status": "Pronto para viajar",
+        "valorTotalEstimado": 1599.5,
+        "dataCriacao": "2026-11-10 13:30:05",
+        "dataAtualizacao": "2026-11-10 13:30:05",
+        "itens": [
+            {
+                "idItem": 1,
+                "tipoServico": "transporte",
+                "idServico": "o2",
+                "descricao": "Ônibus Buser",
+                "detalhes": "Saída 04:00 de Araçatuba · chegada 22:00 · Leito",
+                "dataAgendada": "2026-12-11",
+                "dataFim": null,
+                "horario": "04:00",
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 244.9,
+                "subtotal": 0,
+                "transporte": {
+                    "idTransporte": "o2",
+                    "tipoTransporte": "onibus",
+                    "empresa": "Buser",
+                    "localOrigem": "Araçatuba",
+                    "localDestino": "Rodoviária Novo Rio",
+                    "dataHoraPartida": "2026-12-11 04:00:00",
+                    "dataHoraChegada": "2026-12-11 22:00:00",
+                    "duracaoMinutos": 1080,
+                    "preco": 244.9,
+                    "assentosDisponiveis": 40
+                }
+            },
+            {
+                "idItem": 2,
+                "tipoServico": "hospedagem",
+                "idServico": 1,
+                "descricao": "Arosa Rio Hotel",
+                "detalhes": "Quarto duplo · via Booking.com",
+                "dataAgendada": "2026-12-11",
+                "dataFim": "2026-12-14",
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 3,
+                "valorUnitario": 319.9,
+                "subtotal": 0,
+                "transporte": null
+            },
+            {
+                "idItem": 3,
+                "tipoServico": "guia",
+                "idServico": 1,
+                "descricao": "Guia Marina Costa",
+                "detalhes": "Centro Histórico e Santa Teresa · meio período",
+                "dataAgendada": "2026-12-12",
+                "dataFim": null,
+                "horario": null,
+                "quantidadePessoas": 2,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 150.0,
+                "subtotal": 0,
+                "transporte": null
+            }
+        ],
+        "gastosExtras": [],
+        "anotacoes": [
+            {
+                "idAnotacao": 1,
+                "data": "2026-12-11",
+                "texto": "Levar lanche e travesseiro de pescoço para o ônibus."
+            },
+            {
+                "idAnotacao": 2,
+                "data": "2026-12-12",
+                "texto": "Encontrar a guia Marina às 15h na Praça XV."
+            },
+            {
+                "idAnotacao": 3,
+                "data": "2026-12-13",
+                "texto": "Praia de Copacabana de manhã. Pão de Açúcar no fim da tarde?"
+            },
+            {
+                "idAnotacao": 4,
+                "data": "2026-12-14",
+                "texto": "Check-out até 11h."
+            }
+        ],
+        "compartilhamento": {
+            "idCompartilhamento": 1,
+            "token": "4f1c2a9b8e7d6c5b4a3f2e1d0c9b8a71",
+            "urlLink": "/compartilhado?token=4f1c2a9b8e7d6c5b4a3f2e1d0c9b8a71",
+            "dataExpiracao": "2026-12-10 13:30:05",
+            "statusAtivo": true,
+            "dataCriacao": "2026-11-10 13:30:05"
+        }
+    },
+    {
+        "idRoteiro": 2,
+        "idUsuario": 4,
+        "titulo": "Fim de semana em Ubatuba",
+        "dataInicio": "2027-01-16",
+        "dataFim": "2027-01-18",
+        "origem": "Birigui - SP",
+        "quantidadePessoas": 4,
+        "orcamento": 800.0,
+        "etapaAtual": "Hospedagem",
+        "idDestinos": [
+            11
+        ],
+        "status": "Em planejamento",
+        "valorTotalEstimado": 420.0,
+        "dataCriacao": "2026-11-10 13:30:05",
+        "dataAtualizacao": "2026-11-10 13:30:05",
+        "itens": [
+            {
+                "idItem": 1,
+                "tipoServico": "hospedagem",
+                "idServico": "x1",
+                "descricao": "Pousada Praia Grande",
+                "detalhes": "Chalé para 4 pessoas",
+                "dataAgendada": "2027-01-16",
+                "dataFim": "2027-01-18",
+                "horario": null,
+                "quantidadePessoas": 4,
+                "quantidadeDiarias": 2,
+                "valorUnitario": 210.0,
+                "subtotal": 0,
+                "transporte": null
+            }
+        ],
+        "gastosExtras": [],
+        "anotacoes": [],
+        "compartilhamento": null
+    },
+    {
+        "idRoteiro": 3,
+        "idUsuario": 4,
+        "titulo": "Cataratas com a família",
+        "dataInicio": "2026-07-10",
+        "dataFim": "2026-07-15",
+        "origem": "Birigui - SP",
+        "quantidadePessoas": 4,
+        "orcamento": 4000.0,
+        "etapaAtual": "Revisão",
+        "idDestinos": [
+            5
+        ],
+        "status": "Pronto para viajar",
+        "valorTotalEstimado": 3870.0,
+        "dataCriacao": "2026-11-10 13:30:05",
+        "dataAtualizacao": "2026-11-10 13:30:05",
+        "itens": [
+            {
+                "idItem": 1,
+                "tipoServico": "transporte",
+                "idServico": "VP-foz",
+                "descricao": "Veículo pessoal · SUV ou picape (estimativa)",
+                "detalhes": "1.320 km · Gasolina · ida e volta",
+                "dataAgendada": "2026-07-10",
+                "dataFim": null,
+                "horario": "06:00",
+                "quantidadePessoas": 4,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 1120.0,
+                "subtotal": 0,
+                "transporte": {
+                    "idTransporte": "VP-foz",
+                    "tipoTransporte": "veiculo",
+                    "empresa": "SUV ou picape",
+                    "localOrigem": "Birigui - SP",
+                    "localDestino": "Foz do Iguaçu - PR",
+                    "dataHoraPartida": "2026-07-10 06:00:00",
+                    "dataHoraChegada": "2026-07-10 06:00:00",
+                    "duracaoMinutos": 0,
+                    "preco": 1120.0,
+                    "assentosDisponiveis": 5,
+                    "tipoVeiculo": "SUV ou picape",
+                    "combustivel": "Gasolina",
+                    "distanciaKm": 1320,
+                    "consumoKmPorLitro": 9,
+                    "precoCombustivel": 6.29,
+                    "valorPedagios": 197.47
+                }
+            },
+            {
+                "idItem": 2,
+                "tipoServico": "hospedagem",
+                "idServico": "x3",
+                "descricao": "Hotel Recanto das Águas",
+                "detalhes": "Quarto família",
+                "dataAgendada": "2026-07-10",
+                "dataFim": "2026-07-15",
+                "horario": null,
+                "quantidadePessoas": 4,
+                "quantidadeDiarias": 5,
+                "valorUnitario": 390.0,
+                "subtotal": 0,
+                "transporte": null
+            },
+            {
+                "idItem": 3,
+                "tipoServico": "passeio",
+                "idServico": "x4",
+                "descricao": "Parque Nacional do Iguaçu",
+                "detalhes": "Cataratas · 4 ingressos",
+                "dataAgendada": "2026-07-11",
+                "dataFim": null,
+                "horario": null,
+                "quantidadePessoas": 4,
+                "quantidadeDiarias": 1,
+                "valorUnitario": 200.0,
+                "subtotal": 0,
+                "transporte": null
+            }
+        ],
+        "gastosExtras": [],
+        "anotacoes": [],
+        "compartilhamento": null
+    }
+]
