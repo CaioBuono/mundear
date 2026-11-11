@@ -30,7 +30,7 @@ class TransporteController extends BuscaController
     {
         $obUsuario = self::exigirAutenticacao();
         $obRoteiro = self::exigirRoteiroContexto($obUsuario);
-        $modo      = self::parametroPermitido('modo', self::MODOS, 'onibus');
+        $modo      = self::parametroPermitido('modo', self::MODOS, 'aviao');
 
         $conteudo = $modo === 'veiculo'
             ? self::getEstimativaVeiculo($obRoteiro)

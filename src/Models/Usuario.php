@@ -5,6 +5,7 @@ namespace Models;
 use BD\TabelaJson;
 use Exceptions\DadosInvalidosException;
 use Services\EmailSimulado;
+use Utils\Validador;
 
 class Usuario
 {
@@ -12,6 +13,8 @@ class Usuario
     const PERFIL_ADMINISTRADOR = 'administrador';
 
     const TAMANHO_MINIMO_SENHA = 8;
+
+    const ESTILOS_VIAGEM = ['Mochileiro', 'Casal', 'Família', 'Em grupo de amigos', 'Sozinho'];
 
     protected $idUsuario = null;
 
@@ -28,6 +31,18 @@ class Usuario
     protected $ativo = true;
 
     protected $receberEmails = true;
+
+    protected $receberAlertasPreco = true;
+
+    protected $receberPromocoes = false;
+
+    protected $telefone = '';
+
+    protected $cidade = '';
+
+    protected $dataNascimento = null;
+
+    protected $estilosViagem = [];
 
     protected static function getTabela(): TabelaJson
     {
@@ -67,6 +82,36 @@ class Usuario
     public function isReceberEmails(): bool
     {
         return (bool) $this->receberEmails;
+    }
+
+    public function isReceberAlertasPreco(): bool
+    {
+        return (bool) $this->receberAlertasPreco;
+    }
+
+    public function isReceberPromocoes(): bool
+    {
+        return (bool) $this->receberPromocoes;
+    }
+
+    public function getTelefone(): string
+    {
+        return (string) $this->telefone;
+    }
+
+    public function getCidade(): string
+    {
+        return (string) $this->cidade;
+    }
+
+    public function getDataNascimento(): ?string
+    {
+        return $this->dataNascimento;
+    }
+
+    public function getEstilosViagem(): array
+    {
+        return $this->estilosViagem;
     }
 
     public function isAdministrador(): bool
@@ -137,6 +182,59 @@ class Usuario
         $this->receberEmails = $receberEmails;
 
         self::getTabela()->atualizar($this->idUsuario, ['nome' => $nome, 'email' => $email, 'receberEmails' => $receberEmails]);
+    }
+
+    public function atualizarPerfil(array $dados): void
+    {
+        $nome           = trim((string) ($dados['nome'] ?? ''));
+        $email          = trim((string) ($dados['email'] ?? ''));
+        $telefone       = preg_replace('/\D/', '', (string) ($dados['telefone'] ?? ''));
+        $cidade         = trim((string) ($dados['cidade'] ?? ''));
+        $dataNascimento = trim((string) ($dados['dataNascimento'] ?? ''));
+        $estilos        = array_values(array_intersect(self::ESTILOS_VIAGEM, (array) ($dados['estilosViagem'] ?? [])));
+
+        if(strlen($nome) < 3 or !Validador::email($email)){
+            throw new DadosInvalidosException('Informe um nome com pelo menos 3 caracteres e um e-mail válido.', 'RN06');
+        }
+
+        if($telefone !== '' and !Validador::telefone($telefone)){
+            throw new DadosInvalidosException('Informe um celular válido, com DDD.', 'RN06');
+        }
+
+        if(strlen($cidade) > 80){
+            throw new DadosInvalidosException('A cidade pode ter no máximo 80 caracteres.', 'RN06');
+        }
+
+        if($dataNascimento !== '' and (!Validador::data($dataNascimento) or $dataNascimento >= date('Y-m-d'))){
+            throw new DadosInvalidosException('Informe uma data de nascimento válida, anterior a hoje.', 'RN06');
+        }
+
+        $this->atualizarDados($nome, $email, $this->isReceberEmails());
+
+        $this->telefone       = $telefone;
+        $this->cidade         = $cidade;
+        $this->dataNascimento = $dataNascimento === '' ? null : $dataNascimento;
+        $this->estilosViagem  = $estilos;
+
+        self::getTabela()->atualizar($this->idUsuario, [
+            'telefone'       => $this->telefone,
+            'cidade'         => $this->cidade,
+            'dataNascimento' => $this->dataNascimento,
+            'estilosViagem'  => $this->estilosViagem
+        ]);
+    }
+
+    public function atualizarComunicacoes(bool $dicas, bool $alertasPreco, bool $promocoes): void
+    {
+        $this->receberEmails       = $dicas;
+        $this->receberAlertasPreco = $alertasPreco;
+        $this->receberPromocoes    = $promocoes;
+
+        self::getTabela()->atualizar($this->idUsuario, [
+            'receberEmails'       => $dicas,
+            'receberAlertasPreco' => $alertasPreco,
+            'receberPromocoes'    => $promocoes
+        ]);
     }
 
     public function alterarSenha(string $senhaAtual, string $novaSenha): void
@@ -255,6 +353,12 @@ class Usuario
         $this->perfil       = $registro['perfil'] ?? self::PERFIL_VIAJANTE;
         $this->ativo        = $registro['ativo'] ?? true;
         $this->receberEmails = $registro['receberEmails'] ?? true;
+        $this->receberAlertasPreco = $registro['receberAlertasPreco'] ?? true;
+        $this->receberPromocoes    = $registro['receberPromocoes'] ?? false;
+        $this->telefone            = $registro['telefone'] ?? '';
+        $this->cidade              = $registro['cidade'] ?? '';
+        $this->dataNascimento      = $registro['dataNascimento'] ?? null;
+        $this->estilosViagem       = $registro['estilosViagem'] ?? [];
     }
 
     protected function toArray(): array
@@ -267,7 +371,13 @@ class Usuario
             'dataCadastro' => $this->dataCadastro,
             'perfil'       => $this->perfil,
             'ativo'        => $this->ativo,
-            'receberEmails' => $this->receberEmails
+            'receberEmails' => $this->receberEmails,
+            'receberAlertasPreco' => $this->receberAlertasPreco,
+            'receberPromocoes'    => $this->receberPromocoes,
+            'telefone'            => $this->telefone,
+            'cidade'              => $this->cidade,
+            'dataNascimento'      => $this->dataNascimento,
+            'estilosViagem'       => $this->estilosViagem
         ];
     }
 }

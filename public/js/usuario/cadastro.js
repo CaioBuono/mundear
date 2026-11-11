@@ -2,19 +2,15 @@
     const pagina = document.querySelector('#paginaLogin');
     const textos = {
         login: {
-            titulo: 'Bem-vindo de volta!',
-            subtitulo: 'Faça login para continuar planejando suas aventuras.',
+            titulo: 'Bem-vindo(a) de volta',
+            subtitulo: 'Entre para continuar planejando suas viagens.',
             botao: 'Entrar',
-            alternar: 'Ainda não tem conta?',
-            botaoAlternar: 'Cadastre-se',
             autocompleteSenha: 'current-password'
         },
         cadastro: {
-            titulo: 'Crie sua conta',
-            subtitulo: 'Cadastre-se gratuitamente e comece a montar seus roteiros.',
-            botao: 'Cadastrar',
-            alternar: 'Já tem uma conta?',
-            botaoAlternar: 'Entrar com minha conta',
+            titulo: 'Crie sua conta grátis',
+            subtitulo: 'Leva menos de um minuto.',
+            botao: 'Criar conta',
             autocompleteSenha: 'new-password'
         }
     };
@@ -22,13 +18,15 @@
     function definirModo(modo, limparFeedback) {
         const cadastro = modo === 'cadastro';
         const texto = textos[modo];
+        const botao = document.querySelector('#btnAcessar');
 
         document.querySelector('#tituloForm').textContent = texto.titulo;
         document.querySelector('#subtituloForm').textContent = texto.subtitulo;
-        document.querySelector('#btnAcessar').textContent = texto.botao;
-        document.querySelector('#textoAlternar').textContent = texto.alternar;
-        document.querySelector('#btnCadastroUsuario').textContent = texto.botaoAlternar;
+        botao.textContent = texto.botao;
+        botao.classList.toggle('btn-primario', !cadastro);
+        botao.classList.toggle('btn-destaque', cadastro);
         document.querySelector('#senha').setAttribute('autocomplete', texto.autocompleteSenha);
+        document.querySelector('#senha').setAttribute('placeholder', cadastro ? 'Mínimo de 8 caracteres' : '');
 
         ['#boxNomeUsuario', '#boxConfirmarSenha'].forEach(function (seletor) {
             const box = document.querySelector(seletor);
@@ -37,6 +35,10 @@
         });
 
         document.querySelector('#boxOpcoesLogin').classList.toggle('hidden', cadastro);
+        document.querySelector('#linkEsqueci').classList.toggle('hidden', cadastro);
+        document.querySelectorAll('[data-aba-auth]').forEach(function (aba) {
+            aba.setAttribute('aria-selected', String(aba.dataset.abaAuth === modo));
+        });
         pagina.dataset.modo = modo;
 
         if (limparFeedback) {
@@ -46,9 +48,12 @@
         }
     }
 
-    document.querySelector('#btnCadastroUsuario').addEventListener('click', function () {
-        definirModo(pagina.dataset.modo === 'cadastro' ? 'login' : 'cadastro', true);
-        document.querySelector(pagina.dataset.modo === 'cadastro' ? '#nome' : '#email').focus();
+    document.querySelectorAll('[data-aba-auth]').forEach(function (aba) {
+        aba.addEventListener('click', function () {
+            if (aba.dataset.abaAuth === pagina.dataset.modo) return;
+            definirModo(aba.dataset.abaAuth, true);
+            document.querySelector(aba.dataset.abaAuth === 'cadastro' ? '#nome' : '#email').focus();
+        });
     });
 
     definirModo(pagina.dataset.modo === 'cadastro' ? 'cadastro' : 'login', false);

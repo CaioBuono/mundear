@@ -153,7 +153,7 @@ class Roteiro
 
         $idDestinos = array_unique(array_map('intval', (array) ($dados['destinos'] ?? [])));
         if(empty($idDestinos)){
-            $erros[] = 'Selecione pelo menos um destino.';
+            $erros[] = 'Informe o destino da viagem.';
         }elseif(count(Destino::getPorIds($idDestinos)) !== count($idDestinos)){
             $erros[] = 'Um dos destinos selecionados é inválido.';
         }

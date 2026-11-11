@@ -1,9 +1,9 @@
-<form method="POST" action="/roteiros/itens/remover" data-confirmar="Remover este item do roteiro?">
+<form method="POST" action="{{acao}}" data-confirmar="Remover &quot;{{descricao}}&quot; do roteiro?">
     {{csrf}}
     <input type="hidden" name="idRoteiro" value="{{idRoteiro}}">
-    <input type="hidden" name="idItem" value="{{idItem}}">
+    <input type="hidden" name="{{nomeCampo}}" value="{{id}}">
 
-    <button type="submit" class="cursor-pointer rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600" title="Remover item" aria-label="Remover item">
+    <button type="submit" class="grid cursor-pointer place-items-center rounded-md p-1.5 text-apagado transition hover:bg-alerta-suave hover:text-alerta" aria-label="Remover {{descricao}}" title="Remover">
         {{iconeLixeira}}
     </button>
 </form>

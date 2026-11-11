@@ -1,15 +1,15 @@
-<tr class="align-middle">
-    <td class="px-5 py-4">
-        <div class="flex items-center gap-3">
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-950">{{iniciais}}</span>
+<tr>
+    <td class="border-b border-linha px-4 py-3">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="grid h-10 w-10 flex-none place-items-center rounded-full bg-laranja text-[13px] font-extrabold text-white">{{iniciais}}</span>
             <div class="min-w-0">
-                <p class="font-semibold text-blue-950">{{nome}}</p>
-                <p class="text-xs text-slate-500">{{email}}</p>
+                <b class="block">{{nome}}</b>
+                <span class="text-[12.5px] text-apagado">{{email}}</span>
             </div>
         </div>
     </td>
-    <td class="px-5 py-4 text-slate-600">{{perfil}}</td>
-    <td class="px-5 py-4 text-slate-600">{{cadastro}}</td>
-    <td class="px-5 py-4">{{status}}</td>
-    <td class="px-5 py-4 text-right">{{acao}}</td>
+    <td class="border-b border-linha px-4 py-3">{{perfil}}</td>
+    <td class="border-b border-linha px-4 py-3">{{cadastro}}</td>
+    <td class="border-b border-linha px-4 py-3">{{status}}</td>
+    <td class="border-b border-linha px-4 py-3 text-right">{{acao}}</td>
 </tr>

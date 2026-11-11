@@ -65,6 +65,19 @@ class Session
         return $flash;
     }
 
+    public static function setDadosFormulario(string $formulario, array $dados): void
+    {
+        $_SESSION['formularios'][$formulario] = $dados;
+    }
+
+    public static function getDadosFormulario(string $formulario): ?array
+    {
+        $dados = $_SESSION['formularios'][$formulario] ?? null;
+        unset($_SESSION['formularios'][$formulario]);
+
+        return $dados;
+    }
+
     public static function getTokenCsrf(): string
     {
         if(empty($_SESSION['csrf'])){

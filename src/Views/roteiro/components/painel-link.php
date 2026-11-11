@@ -1,26 +1,28 @@
-<div class="flex items-center justify-between gap-3">
-    <h2 class="text-lg font-semibold text-blue-950">Link de compartilhamento</h2>
-    <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Ativo</span>
-</div>
-<p class="mt-1 text-sm text-slate-500">Qualquer pessoa com este link pode ver o roteiro em modo somente leitura.</p>
+<dialog id="janela-link" class="m-auto w-[min(460px,calc(100vw-32px))] rounded-xl border border-linha bg-white p-6 text-tinta shadow-[0_24px_60px_rgba(15,29,54,.35)] backdrop:bg-[rgba(15,29,54,.55)]" aria-labelledby="titulo-janela-link" {{abrirAoCarregar}}>
+    <div class="flex flex-col gap-3.5">
+        <div class="flex items-center justify-between gap-3">
+            <h2 id="titulo-janela-link" class="text-[19px] font-bold">Compartilhar roteiro</h2>
+            <button type="button" class="grid cursor-pointer place-items-center rounded-md p-1.5 text-apagado hover:bg-alerta-suave hover:text-alerta" data-fechar-janela aria-label="Fechar">{{iconeFechar}}</button>
+        </div>
 
-<div class="mt-4 flex gap-2">
-    <input id="linkCompartilhamento" type="text" value="{{urlCompleta}}" readonly class="campo min-w-0 text-sm" aria-label="Link de compartilhamento" onclick="this.select()">
-    <button type="button" class="btn-secundario shrink-0 px-3" data-copiar="#linkCompartilhamento" title="Copiar link" aria-label="Copiar link">
-        {{iconeCopiar}}
-    </button>
-</div>
-<p class="mt-2 text-xs text-slate-500">{{expiracao}}</p>
+        <p class="dica">Quem abrir o link vê o roteiro completo, mas não consegue editar nada.</p>
 
-<div class="mt-4 grid grid-cols-2 gap-2">
-    <a href="{{urlRelativa}}" target="_blank" rel="noopener" class="btn-secundario h-10 text-sm">
-        {{iconeOlho}}
-        Visualizar
-    </a>
+        <div class="flex gap-2">
+            <input id="linkCompartilhamento" type="text" value="{{urlCompleta}}" readonly class="min-w-0 flex-1 rounded-lg border border-linha bg-fundo px-3 py-2.5 font-semibold outline-none" aria-label="Link de compartilhamento" onclick="this.select()">
+            <button type="button" class="btn-destaque" data-copiar="#linkCompartilhamento" data-texto-copiado="Copiado!" title="Copiar link">Copiar</button>
+        </div>
 
-    <form method="POST" action="/roteiros/revogar-link" data-confirmar="Revogar o link? Quem tiver o endereço não conseguirá mais ver o roteiro.">
-        {{csrf}}
-        <input type="hidden" name="idRoteiro" value="{{id}}">
-        <button type="submit" class="btn-perigo h-10 w-full text-sm">Revogar</button>
-    </form>
-</div>
+        <div class="flex flex-wrap gap-2">
+            <span class="rounded-full bg-[#e6edfa] px-2.5 py-0.5 text-xs font-bold text-navy-3">Somente leitura</span>
+            <span class="rounded-full bg-[#e6edfa] px-2.5 py-0.5 text-xs font-bold text-navy-3">{{expiracao}}</span>
+        </div>
+
+        <a href="{{urlRelativa}}" target="_blank" rel="noopener" class="btn-primario">{{iconeOlho}}Ver como o acompanhante vê</a>
+
+        <form method="POST" action="/roteiros/revogar-link" class="flex flex-col" data-confirmar="Desativar o link? Quem tinha o link não vai mais conseguir ver o roteiro.">
+            {{csrf}}
+            <input type="hidden" name="idRoteiro" value="{{id}}">
+            <button type="submit" class="btn-secundario">Desativar link</button>
+        </form>
+    </div>
+</dialog>

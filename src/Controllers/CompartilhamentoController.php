@@ -4,8 +4,8 @@ namespace Controllers;
 
 use Models\Roteiro;
 use Models\Usuario;
-use Utils\Formatador;
-use Utils\Texto;
+use Session\Session;
+use Utils\Validador;
 use Views\Icones;
 
 class CompartilhamentoController extends Controller
@@ -25,20 +25,20 @@ class CompartilhamentoController extends Controller
             return ErroController::exibir(410, 'Link indisponível', 'Este link de compartilhamento expirou ou foi desativado pelo autor do roteiro.');
         }
 
-        return self::renderizarPaginaAvulsa('roteiro/compartilhado.php', [
-            'titulo'          => self::e($obRoteiro->getTitulo()),
-            'autor'           => self::e(Texto::primeiroNome($obDono->getNome())),
-            'destinos'        => self::e($obRoteiro->getNomesDestinos()),
-            'periodo'         => Formatador::data($obRoteiro->getDataInicio()) . ' a ' . Formatador::data($obRoteiro->getDataFim()),
-            'dias'            => $obRoteiro->getQuantidadeDias() . ($obRoteiro->getQuantidadeDias() > 1 ? ' dias' : ' dia'),
-            'total'           => self::moeda($obRoteiro->getValorTotalEstimado()),
-            'totaisPorTipo'   => RoteiroController::getTotaisPorTipoHtml($obRoteiro),
-            'cronograma'      => RoteiroController::getCronogramaHtml($obRoteiro, false),
-            'validade'        => $obCompartilhamento->getDataExpiracao() ? 'Link válido até ' . Formatador::data($obCompartilhamento->getDataExpiracao()) : 'Link sem data de expiração',
-            'atualizacao'     => Formatador::dataHora($obRoteiro->getDataAtualizacao()),
-            'iconePin'        => Icones::get('pin', 'h-4 w-4 text-slate-400'),
-            'iconeCalendario' => Icones::get('calendario', 'h-4 w-4 text-slate-400'),
-            'iconeOlho'       => Icones::get('olho', 'h-4 w-4')
+        $expiracao     = $obCompartilhamento->getDataExpiracao();
+        $diasRestantes = $expiracao ? max(0, Validador::diasEntre(date('Y-m-d'), substr($expiracao, 0, 10))) : null;
+        $ehDono        = Session::getIdUsuarioLogado() === $obRoteiro->getIdUsuario();
+
+        return self::renderizarPaginaAvulsa('roteiro/compartilhado.php', RoteiroController::getResumoViagem($obRoteiro) + [
+            'titulo'        => self::e($obRoteiro->getTitulo()),
+            'autor'         => self::e($obDono->getNome()),
+            'total'         => self::moeda($obRoteiro->calcularValorTotal()),
+            'porPessoa'     => self::moeda($obRoteiro->calcularValorPorPessoa()),
+            'totaisPorTipo' => RoteiroController::getTotaisPorTipoHtml($obRoteiro),
+            'cronograma'    => RoteiroController::getCronogramaHtml($obRoteiro, false),
+            'validade'      => $diasRestantes === null ? 'Link sem data de expiração' : 'Link válido por ' . $diasRestantes . ($diasRestantes === 1 ? ' dia' : ' dias'),
+            'voltar'        => $ehDono ? '<a href="/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '" class="btn-vidro ml-auto !h-9 !px-3 !text-[13px]">Voltar à prévia</a>' : '',
+            'iconeOlho'     => Icones::get('olho', 'h-[18px] w-[18px] flex-none')
         ], $obRoteiro->getTitulo());
     }
 }

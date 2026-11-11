@@ -1,117 +1,146 @@
-<nav class="mb-4 text-sm text-slate-500">
-    <a href="/roteiros" class="hover:text-blue-900">Meus roteiros</a>
-    <span class="mx-1">/</span>
-    <span class="text-slate-700">{{titulo}}</span>
-</nav>
+<div class="flex flex-col gap-2">
+    <nav class="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold text-apagado" aria-label="Você está em">
+        <a href="/roteiros" class="hover:text-navy">Meus roteiros</a>
+        <span>/</span>
+        <span class="text-tinta">{{titulo}}</span>
+    </nav>
 
-<div class="flex flex-wrap items-center gap-3">
-    <h1 class="text-2xl font-bold text-blue-950 sm:text-3xl">{{titulo}}</h1>
-    {{status}}
+    <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-[30px] font-extrabold leading-tight tracking-[-.01em]">{{titulo}}</h1>
+        {{status}}
+        <button type="button" class="btn-secundario ml-auto" data-abrir-janela="janela-novo-roteiro">{{iconeMais}}Novo roteiro</button>
+    </div>
+
+    <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-apagado">
+        <span class="inline-flex items-center gap-1.5">{{iconePin}}{{trajeto}}</span>
+        <span class="inline-flex items-center gap-1.5">{{iconeCalendario}}{{periodo}} · {{dias}}</span>
+        <span class="inline-flex items-center gap-1.5">{{iconePessoas}}{{pessoas}}</span>
+    </div>
 </div>
-<p class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-slate-600">
-    <span class="inline-flex items-center gap-1.5">{{iconePin}} {{destinos}}</span>
-    <span class="inline-flex items-center gap-1.5">{{iconeCalendario}} {{periodo}} · {{dias}}</span>
-</p>
 
-<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-    <div class="min-w-0 space-y-6">
+<div class="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div class="flex min-w-0 flex-col gap-[18px]">
         <section class="cartao">
-            <h2 class="text-lg font-semibold text-blue-950">Adicionar serviços</h2>
-            <p class="text-sm text-slate-500">Pesquise e vincule opções a este roteiro. O valor total é recalculado a cada inclusão ou remoção.</p>
+            <h2 class="text-lg font-bold">Adicionar serviços</h2>
+            <p class="dica mt-0.5">Pesquise e adicione opções a este roteiro, ou registre um gasto que você fez por fora. O valor total é recalculado a cada inclusão ou remoção.</p>
 
-            <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <a href="/transporte?roteiro={{id}}" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-blue-300 hover:bg-blue-50">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-900">{{iconeAviao}}</span>
+            <div class="mt-3.5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+                <a href="{{urlTransporte}}" class="flex flex-col items-center gap-2.5 rounded-xl border border-linha bg-white px-2 py-[18px] text-center font-bold transition hover:border-navy hover:bg-[#f8fafc]">
+                    <span class="icone-servico cor-transporte">{{iconeAviao}}</span>
                     Transporte
                 </a>
-                <a href="/hospedagem?roteiro={{id}}" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-orange-300 hover:bg-orange-50">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-600">{{iconeCama}}</span>
+                <a href="{{urlHospedagem}}" class="flex flex-col items-center gap-2.5 rounded-xl border border-linha bg-white px-2 py-[18px] text-center font-bold transition hover:border-navy hover:bg-[#f8fafc]">
+                    <span class="icone-servico cor-hospedagem">{{iconeCama}}</span>
                     Hospedagem
                 </a>
-                <a href="/turismo?roteiro={{id}}&modo=guias" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-emerald-300 hover:bg-emerald-50">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">{{iconeGuia}}</span>
+                <a href="{{urlGuias}}" class="flex flex-col items-center gap-2.5 rounded-xl border border-linha bg-white px-2 py-[18px] text-center font-bold transition hover:border-navy hover:bg-[#f8fafc]">
+                    <span class="icone-servico cor-guia">{{iconeGuia}}</span>
                     Guias
                 </a>
-                <a href="/turismo?roteiro={{id}}&modo=passeios" class="flex flex-col items-center gap-2 rounded-xl border border-slate-200 px-3 py-4 text-center text-sm font-semibold text-blue-950 transition hover:border-violet-300 hover:bg-violet-50">
-                    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-700">{{iconeIngresso}}</span>
+                <a href="{{urlPasseios}}" class="flex flex-col items-center gap-2.5 rounded-xl border border-linha bg-white px-2 py-[18px] text-center font-bold transition hover:border-navy hover:bg-[#f8fafc]">
+                    <span class="icone-servico cor-passeio">{{iconeIngresso}}</span>
                     Passeios
                 </a>
+                <button type="button" data-abrir-janela="janela-gasto" class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border border-linha bg-white px-2 py-[18px] text-center font-bold transition hover:border-navy hover:bg-[#f8fafc]">
+                    <span class="icone-servico cor-extra">{{iconeCarteira}}</span>
+                    Outro gasto
+                </button>
             </div>
         </section>
 
-        <section>
-            <div class="mb-3 flex items-end justify-between gap-3">
-                <div>
-                    <h2 class="text-lg font-semibold text-blue-950">Cronograma</h2>
-                    <p class="text-sm text-slate-500">{{quantidadeItens}} no roteiro</p>
-                </div>
-            </div>
+        <div>
+            <h2 class="text-lg font-bold">Cronograma</h2>
+            <p class="dica mt-0.5">{{quantidadeItens}}</p>
+        </div>
 
-            <div class="space-y-4">
-                {{cronograma}}
-            </div>
-        </section>
+        <div class="flex flex-col gap-3.5">
+            {{cronograma}}
+        </div>
 
-        <details class="cartao group">
-            <summary class="flex cursor-pointer list-none items-center justify-between font-semibold text-blue-950">
+        <details class="cartao group !p-0">
+            <summary class="flex cursor-pointer list-none items-center justify-between px-[22px] py-[18px] font-display text-base font-bold [&::-webkit-details-marker]:hidden">
                 Editar dados da viagem
-                <span class="text-slate-400 transition group-open:rotate-180">▾</span>
+                {{iconeBaixo}}
             </summary>
 
-            <form method="POST" action="/roteiros/editar" class="mt-5 space-y-5">
+            <form method="POST" action="/roteiros/editar" class="grid grid-cols-2 gap-4 px-[22px] pb-[22px] md:grid-cols-6">
                 {{csrf}}
                 <input type="hidden" name="idRoteiro" value="{{id}}">
 
-                <div>
-                    <label for="titulo" class="rotulo">Nome da viagem</label>
-                    <input id="titulo" name="titulo" type="text" value="{{valorTitulo}}" maxlength="80" required class="campo">
+                <div class="col-span-2 md:col-span-6">
+                    <label for="titulo" class="rotulo">Título do roteiro</label>
+                    <input id="titulo" name="titulo" value="{{valorTitulo}}" maxlength="80" class="campo">
+                </div>
+                <div class="col-span-2 md:col-span-3">
+                    <label for="origem" class="rotulo">Origem</label>
+                    <input id="origem" name="origem" value="{{valorOrigem}}" maxlength="80" placeholder="Ex.: Birigui - SP" class="campo">
+                </div>
+                <div class="col-span-2 md:col-span-3">
+                    <label for="destino" class="rotulo">Destino</label>
+                    <input id="destino" name="destino" value="{{valorDestino}}" list="listaDestinos" placeholder="Ex.: Salvador - BA" autocomplete="off" class="campo">
+                    <datalist id="listaDestinos">{{datalistDestinos}}</datalist>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="dataInicio" class="rotulo">Ida</label>
+                    <input id="dataInicio" name="dataInicio" type="date" value="{{valorDataInicio}}" class="campo">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="dataFim" class="rotulo">Volta</label>
+                    <input id="dataFim" name="dataFim" type="date" value="{{valorDataFim}}" class="campo">
+                </div>
+                <div class="col-span-2 md:col-span-2">
+                    <label for="quantidadePessoas" class="rotulo">Pessoas</label>
+                    <div class="flex h-11 overflow-hidden rounded-lg border border-linha bg-white focus-within:border-navy focus-within:ring-3 focus-within:ring-suave">
+                        <button type="button" data-passo="quantidadePessoas:-1" class="w-[38px] flex-none cursor-pointer bg-suave text-lg font-extrabold text-navy hover:bg-linha" aria-label="Menos uma pessoa">−</button>
+                        <input id="quantidadePessoas" name="quantidadePessoas" type="number" min="1" max="20" value="{{valorPessoas}}" class="w-full min-w-0 border-0 text-center font-bold outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none">
+                        <button type="button" data-passo="quantidadePessoas:1" class="w-[38px] flex-none cursor-pointer bg-suave text-lg font-extrabold text-navy hover:bg-linha" aria-label="Mais uma pessoa">+</button>
+                    </div>
+                </div>
+                <div class="col-span-2 md:col-span-6">
+                    <label for="orcamento" class="rotulo">Quanto quer gastar? (orçamento total)</label>
+                    <div class="relative">
+                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-apagado">R$</span>
+                        <input id="orcamento" name="orcamento" type="number" min="0" step="50" inputmode="decimal" value="{{valorOrcamento}}" class="campo !pl-[38px]">
+                    </div>
                 </div>
 
-                <div class="grid gap-5 sm:grid-cols-2">
-                    <div>
-                        <label for="dataInicio" class="rotulo">Data de ida</label>
-                        <input id="dataInicio" name="dataInicio" type="date" value="{{valorDataInicio}}" required class="campo">
-                    </div>
-                    <div>
-                        <label for="dataFim" class="rotulo">Data de volta</label>
-                        <input id="dataFim" name="dataFim" type="date" value="{{valorDataFim}}" required class="campo">
-                    </div>
-                </div>
-
-                <fieldset>
-                    <legend class="rotulo">Destinos</legend>
-                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {{opcoesDestinos}}
-                    </div>
-                </fieldset>
-
-                <p class="text-xs text-slate-500">Os serviços já adicionados precisam continuar dentro do novo período e os guias precisam atuar em um dos destinos.</p>
-
-                <div class="flex justify-end">
+                <div class="col-span-2 flex flex-wrap items-center justify-between gap-3 md:col-span-6">
+                    <span class="dica">Os serviços já adicionados precisam continuar dentro das novas datas.</span>
                     <button type="submit" class="btn-primario">Salvar dados</button>
                 </div>
             </form>
         </details>
     </div>
 
-    <aside class="space-y-6 lg:sticky lg:top-24 lg:self-start">
-        <section class="cartao">
-            <p class="text-sm text-slate-500">Valor total estimado</p>
-            <p class="mt-1 text-3xl font-bold text-blue-950" data-total-roteiro>{{total}}</p>
-
-            <dl class="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-                {{totaisPorTipo}}
-            </dl>
+    <aside class="flex flex-col gap-3.5 lg:sticky lg:top-[100px]">
+        <section class="cartao flex flex-col gap-2.5">
+            <span class="dica font-semibold">Valor total estimado</span>
+            <b class="font-display text-[32px] font-extrabold leading-tight text-navy" data-total-roteiro>{{total}}</b>
+            <span class="dica">{{porPessoa}} por pessoa</span>
+            <div class="flex flex-col">{{totaisPorTipo}}</div>
+            {{orcamento}}
         </section>
 
-        <section class="cartao scroll-mt-24" id="compartilhar">
-            {{painelCompartilhamento}}
-        </section>
+        {{painelCompartilhamento}}
 
-        <form method="POST" action="/roteiros/excluir" data-confirmar="Excluir este roteiro definitivamente? Todos os itens e o link de compartilhamento serão apagados.">
-            {{csrf}}
-            <input type="hidden" name="idRoteiro" value="{{id}}">
-            <button type="submit" class="btn-perigo w-full">Excluir roteiro</button>
-        </form>
+        <div>
+            <button type="button" class="btn-perigo w-full aria-expanded:hidden" data-alternar="confirmar-exclusao" aria-expanded="false">Excluir roteiro</button>
+
+            <div id="confirmar-exclusao" class="flex flex-col gap-2.5 rounded-xl border border-[#f1b9a4] bg-alerta-suave p-3.5" hidden>
+                <b class="text-sm text-alerta">Excluir "{{titulo}}"?</b>
+                <span class="dica">O roteiro e todos os serviços dele serão apagados. Essa ação não pode ser desfeita.</span>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" class="btn-secundario !h-9 !px-3 !text-[13px]" data-alternar="confirmar-exclusao">Cancelar</button>
+                    <form method="POST" action="/roteiros/excluir">
+                        {{csrf}}
+                        <input type="hidden" name="idRoteiro" value="{{id}}">
+                        <button type="submit" class="btn-perigo !h-9 !border-alerta !bg-alerta !px-3 !text-[13px] !text-white">Sim, excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </aside>
 </div>
+
+{{janelaGasto}}
+{{janelaNovo}}

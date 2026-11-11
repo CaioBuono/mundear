@@ -8,6 +8,8 @@ class Formatador
 
     private const DIAS_SEMANA_CURTO = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
+    private const MESES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
     public static function moeda(float $valor): string
     {
         return 'R$ ' . number_format($valor, 2, ',', '.');
@@ -21,6 +23,15 @@ class Formatador
     public static function dataCurta(?string $data): string
     {
         return $data ? date('d/m', strtotime($data)) : '';
+    }
+
+    public static function mesAno(?string $data): string
+    {
+        if(!$data) return '–';
+
+        $momento = strtotime($data);
+
+        return self::MESES_CURTO[(int) date('n', $momento) - 1] . '/' . date('Y', $momento);
     }
 
     public static function dataHora(?string $dataHora): string

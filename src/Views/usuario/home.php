@@ -72,21 +72,21 @@
     </form>
 
     <div class="grid gap-4 md:grid-cols-3">
-        <a href="/roteiros" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#f6cfb4] bg-[linear-gradient(135deg,#fff3ea_0%,#ffe6d5_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
+        <a href="/roteiros?status=planejamento" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#f6cfb4] bg-[linear-gradient(135deg,#fff3ea_0%,#ffe6d5_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
             <span class="flex min-w-0 items-center gap-3">
                 <span class="grid h-12 w-12 flex-none place-items-center rounded-xl bg-laranja text-white">{{iconeLista}}</span>
                 <span><b class="block font-display text-[15.5px]">Em planejamento</b><small class="block text-[12.5px] font-medium text-[#9a5a33]">Você começou a montar e ainda não terminou</small></span>
             </span>
             <b class="font-display text-[34px] font-extrabold leading-none text-laranja-escuro">{{totalPlanejamento}}</b>
         </a>
-        <a href="/roteiros" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#c3d3ef] bg-[linear-gradient(135deg,#eef3fc_0%,#dde7f8_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
+        <a href="/roteiros?status=prontos" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#c3d3ef] bg-[linear-gradient(135deg,#eef3fc_0%,#dde7f8_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
             <span class="flex min-w-0 items-center gap-3">
                 <span class="grid h-12 w-12 flex-none place-items-center rounded-xl bg-[#2b4c8c] text-white">{{iconeCheck}}</span>
                 <span><b class="block font-display text-[15.5px]">Prontos para viajar</b><small class="block text-[12.5px] font-medium text-[#4b5f86]">Tudo planejado, só falta chegar o dia</small></span>
             </span>
             <b class="font-display text-[34px] font-extrabold leading-none text-navy-3">{{totalProntos}}</b>
         </a>
-        <a href="/roteiros" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#b9e2cb] bg-[linear-gradient(135deg,#ebf8f1_0%,#d8f0e3_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
+        <a href="/roteiros?status=realizadas" class="flex items-center justify-between gap-3.5 rounded-xl border border-[#b9e2cb] bg-[linear-gradient(135deg,#ebf8f1_0%,#d8f0e3_100%)] px-5 py-[18px] shadow-cartao transition hover:-translate-y-px">
             <span class="flex min-w-0 items-center gap-3">
                 <span class="grid h-12 w-12 flex-none place-items-center rounded-xl bg-ok text-white">{{iconeMapa}}</span>
                 <span><b class="block font-display text-[15.5px]">Viagens realizadas</b><small class="block text-[12.5px] font-medium text-[#3f7259]">Viagens que você já fez</small></span>

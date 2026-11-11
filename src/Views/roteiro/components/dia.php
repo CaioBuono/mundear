@@ -1,19 +1,19 @@
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" id="dia-{{data}}">
-    <header class="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-5 py-3">
-        <div class="flex items-center gap-3">
-            <div class="flex h-11 w-11 flex-col items-center justify-center rounded-xl bg-blue-950 text-white">
-                <span class="text-[10px] uppercase leading-none tracking-wide text-white/70">Dia</span>
-                <span class="text-base font-bold leading-tight">{{numero}}</span>
-            </div>
-            <div>
-                <p class="font-semibold text-blue-950">{{dataFormatada}}</p>
-                <p class="text-xs text-slate-500">{{diaSemana}}</p>
-            </div>
-        </div>
-        {{acaoDia}}
+<section class="cartao scroll-mt-24 overflow-hidden !p-0" id="dia-{{data}}">
+    <header class="flex flex-wrap items-center gap-3.5 border-b border-linha bg-[#f8fafc] px-[18px] py-3.5">
+        <span class="flex h-12 w-12 flex-none flex-col items-center justify-center rounded-[10px] bg-navy leading-none text-white">
+            <small class="text-[9.5px] font-bold uppercase tracking-[.08em] opacity-75">Dia</small>
+            <b class="mt-0.5 font-display text-xl">{{numero}}</b>
+        </span>
+        <span>
+            <b class="block font-display text-base">{{dataFormatada}}</b>
+            <span class="text-[12.5px] text-apagado">{{diaSemana}}</span>
+        </span>
+        {{acoesDia}}
     </header>
 
-    <div class="divide-y divide-slate-100">
+    <div class="divide-y divide-dashed divide-linha">
         {{itens}}
     </div>
+
+    {{anotacao}}
 </section>

@@ -12,11 +12,18 @@ document.querySelectorAll('[data-copiar]').forEach(function (botao) {
 
         const confirmarCopia = function () {
             const titulo = botao.getAttribute('title');
+            const texto = botao.textContent;
             botao.setAttribute('title', 'Copiado!');
             botao.classList.add('bg-emerald-50');
+            if (botao.dataset.textoCopiado) {
+                botao.textContent = botao.dataset.textoCopiado;
+            }
             setTimeout(function () {
                 botao.setAttribute('title', titulo);
                 botao.classList.remove('bg-emerald-50');
+                if (botao.dataset.textoCopiado) {
+                    botao.textContent = texto;
+                }
             }, 1500);
         };
 
@@ -157,13 +164,23 @@ document.addEventListener('click', function (evento) {
     if (botaoAlternar) {
         const painel = document.getElementById(botaoAlternar.dataset.alternar);
         painel.hidden = !painel.hidden;
-        botaoAlternar.setAttribute('aria-expanded', String(!painel.hidden));
+        document.querySelectorAll('[data-alternar="' + botaoAlternar.dataset.alternar + '"]').forEach(function (botao) {
+            botao.setAttribute('aria-expanded', String(!painel.hidden));
+        });
         return;
     }
 
     const botaoAbrir = evento.target.closest('[data-abrir-janela]');
     if (botaoAbrir) {
-        document.getElementById(botaoAbrir.dataset.abrirJanela).showModal();
+        const janela = document.getElementById(botaoAbrir.dataset.abrirJanela);
+        const campoDia = janela.querySelector('select[name=data]');
+        if (campoDia) {
+            campoDia.selectedIndex = 0;
+            if (botaoAbrir.dataset.dia) {
+                campoDia.value = botaoAbrir.dataset.dia;
+            }
+        }
+        janela.showModal();
         return;
     }
 
@@ -225,4 +242,62 @@ document.addEventListener('keydown', function (evento) {
     if (evento.key === 'Escape' && fotoAmpliada) {
         fotoAmpliada.remove();
     }
+});
+
+document.querySelectorAll('dialog[data-abrir-ao-carregar]').forEach(function (janela) {
+    janela.showModal();
+    history.replaceState(null, '', location.pathname + location.search.replace(/&compartilhar=1/, ''));
+});
+
+document.querySelectorAll('form[data-anotacao]').forEach(function (formulario) {
+    const campo = formulario.elements.texto;
+    const status = formulario.querySelector('[data-status-anotacao]');
+    let textoSalvo = campo.value;
+
+    campo.addEventListener('change', function () {
+        if (campo.value === textoSalvo) return;
+
+        fetch(formulario.action, {
+            method: 'POST',
+            body: new FormData(formulario),
+            headers: { 'X-Requested-With': 'fetch' }
+        }).then(function (resposta) {
+            if (resposta.ok) {
+                textoSalvo = campo.value;
+                status.className = 'mt-1 block text-xs text-ok';
+                status.textContent = 'Anotação salva.';
+                setTimeout(function () { status.textContent = ''; }, 2000);
+                return;
+            }
+
+            return resposta.text().then(function (mensagem) {
+                status.className = 'mt-1 block text-xs font-semibold text-alerta';
+                status.textContent = mensagem || 'Não foi possível salvar a anotação.';
+            });
+        }).catch(function () {
+            status.className = 'mt-1 block text-xs font-semibold text-alerta';
+            status.textContent = 'Não foi possível salvar a anotação. Verifique a conexão.';
+        });
+    });
+});
+
+document.querySelectorAll('form[data-salvar-automatico]').forEach(function (formulario) {
+    const status = formulario.querySelector('[data-status-salvamento]');
+
+    formulario.addEventListener('change', function () {
+        fetch(formulario.action, {
+            method: 'POST',
+            body: new FormData(formulario),
+            headers: { 'X-Requested-With': 'fetch' }
+        }).then(function (resposta) {
+            status.className = resposta.ok ? 'text-xs text-ok' : 'text-xs font-semibold text-alerta';
+            status.textContent = resposta.ok ? 'Preferência salva.' : 'Não foi possível salvar. Tente de novo.';
+            if (resposta.ok) {
+                setTimeout(function () { status.textContent = ''; }, 2000);
+            }
+        }).catch(function () {
+            status.className = 'text-xs font-semibold text-alerta';
+            status.textContent = 'Não foi possível salvar. Verifique a conexão.';
+        });
+    });
 });

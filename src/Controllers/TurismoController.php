@@ -90,13 +90,13 @@ class TurismoController extends BuscaController
         $cards = array_map(function(GuiaTuristico $obGuia) use ($obRoteiro, $dataPadrao, $noRoteiro, $tabela){
             $apresentacao = $tabela->buscarPorId($obGuia->getIdGuia()) ?? [];
             $jaNoRoteiro  = in_array((string) $obGuia->getIdGuia(), $noRoteiro, true);
-            $unidade      = $apresentacao['unidadeValor'] ?? 'diária';
+            $unidade      = $obGuia->getUnidadeValor();
             $nota         = isset($apresentacao['avaliacao']) ? str_replace('.', ',', (string) $apresentacao['avaliacao']) : '–';
             $campos       = ['tipoServico' => ItemRoteiro::TIPO_GUIA, 'idServico' => $obGuia->getIdGuia(), 'pessoas' => $obRoteiro->getQuantidadePessoas()];
 
             $foto = empty($apresentacao['foto'])
                 ? self::e(Texto::iniciais($obGuia->getNome()))
-                : '<img src="/public/img/' . self::e($apresentacao['foto']) . '" alt="Foto de ' . self::e($obGuia->getNome()) . '. Clique para ampliar" class="block h-full w-full cursor-zoom-in rounded-full object-cover" data-ampliar>';
+                : '<img src="/public/img/' . self::e($apresentacao['foto']) . '" alt="Foto de ' . self::e($obGuia->getNome()) . '. Clique para ampliar" class="block h-16 w-16 cursor-zoom-in rounded-full object-cover" data-ampliar>';
 
             return [
                 'nota'          => (float) ($apresentacao['avaliacao'] ?? 0),

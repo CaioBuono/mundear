@@ -154,7 +154,7 @@ class UsuarioController extends Controller
 
     public static function getRaiz(): string
     {
-        if(self::verificarAutenticacao()){
+        if(self::verificarAutenticacao() and !isset($_GET['site'])){
             self::redirecionar(self::exigirAutenticacao()->obterTelaInicial());
         }
 
@@ -169,12 +169,20 @@ class UsuarioController extends Controller
 
         $flash = self::getFlashHtml();
 
-        return self::renderizarLogin(['feedback' => $flash ? '<div class="mt-6">' . $flash . '</div>' : '']);
+        return self::renderizarLogin(['feedback' => $flash]);
     }
 
     private static function renderizarLogin(array $variaveisLayout): string
     {
-        $variaveisLayout += ['feedback' => '', 'modo' => 'login', 'valorEmail' => '', 'valorNome' => ''];
+        $variaveisLayout += [
+            'feedback'          => '',
+            'modo'              => 'login',
+            'valorEmail'        => '',
+            'valorNome'         => '',
+            'iconeComparar'     => Icones::get('carteira', 'h-[22px] w-[22px]'),
+            'iconeOrganizar'    => Icones::get('calendario', 'h-[22px] w-[22px]'),
+            'iconeCompartilhar' => Icones::get('link', 'h-[22px] w-[22px]')
+        ];
 
         $paths = [
             'estrutura' => self::$pathEstruturaAuth,
@@ -228,7 +236,7 @@ class UsuarioController extends Controller
             'valorPessoas'      => self::e($valores['quantidadePessoas'] ?? '2'),
             'valorOrcamento'    => self::e($valores['orcamento'] ?? ''),
             'dataMinima'        => date('Y-m-d'),
-            'datalistDestinos'  => implode('', array_map(fn(Destino $obDestino) => '<option value="' . self::e($obDestino->getCidade() . ' - ' . $obDestino->getEstado()) . '"></option>', Destino::listar())),
+            'datalistDestinos'  => self::getDatalistDestinos(),
             'totalPlanejamento' => $contarStatus(Roteiro::STATUS_EM_PLANEJAMENTO),
             'totalProntos'      => $contarStatus(Roteiro::STATUS_PRONTO_PARA_VIAJAR),
             'totalRealizadas'   => $contarStatus(Roteiro::STATUS_VIAGEM_REALIZADA),
@@ -279,48 +287,77 @@ class UsuarioController extends Controller
     public static function getPerfil(): string
     {
         $obUsuario = self::exigirAutenticacao();
+        $roteiros  = count(Roteiro::listarPorUsuario($obUsuario->getIdUsuario()));
 
-        $infoAdmin = '';
+        $linhaInfo = fn(string $rotulo, string $valor) => '<div class="flex justify-between gap-3"><span class="text-apagado">' . $rotulo . '</span><span class="font-semibold">' . $valor . '</span></div>';
+
+        $infos = $linhaInfo('Perfil', $obUsuario->isAdministrador() ? 'Administrador' : 'Viajante')
+               . $linhaInfo('Membro desde', self::e(Formatador::mesAno($obUsuario->getDataCadastro())))
+               . $linhaInfo('Roteiros criados', (string) $roteiros);
+
         if($obUsuario instanceof Administrador){
-            $infoAdmin = sprintf(
-                '<div class="flex justify-between gap-4 py-3"><dt class="text-slate-500">Credencial</dt><dd class="font-medium text-blue-950">%s · nível %d</dd></div>',
-                self::e($obUsuario->getCodigoCredencial()),
-                $obUsuario->getNivelAcesso()
+            $infos .= $linhaInfo('Credencial', self::e($obUsuario->getCodigoCredencial() . ' · nível ' . $obUsuario->getNivelAcesso()));
+        }
+
+        $estilos = '';
+        foreach(Usuario::ESTILOS_VIAGEM as $indice => $estilo){
+            $estilos .= sprintf(
+                '<label class="cursor-pointer"><input type="checkbox" name="estilosViagem[]" value="%s" class="peer sr-only" %s><span class="inline-block rounded-full border border-linha bg-white px-3.5 py-[7px] text-[13.5px] font-bold text-navy transition hover:border-navy peer-checked:border-navy peer-checked:bg-navy peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-laranja">%s</span></label>',
+                self::e($estilo),
+                in_array($estilo, $obUsuario->getEstilosViagem(), true) ? 'checked' : '',
+                self::e($estilo)
             );
         }
 
+        $cabecalho = sprintf(
+            '<div class="border-b border-linha bg-white"><div class="container-app flex items-center gap-4 pb-6 pt-[22px]"><span class="grid h-14 w-14 flex-none place-items-center rounded-[14px] bg-navy text-white shadow-[0_8px_18px_-10px_var(--color-navy)]">%s</span><div class="min-w-0"><h1 class="text-[28px] font-extrabold leading-tight tracking-[-.01em]">Meu perfil</h1><p class="mt-0.5 text-[14.5px] text-apagado">Mantenha seus dados atualizados e escolha como quer receber novidades do Mundear.</p></div></div></div>',
+            Icones::get('pessoas', 'h-7 w-7')
+        );
+
         return self::renderizarPagina('usuario/perfil.php', [
-            'iniciais'      => self::e(Texto::iniciais($obUsuario->getNome())),
-            'nome'          => self::e($obUsuario->getNome()),
-            'email'         => self::e($obUsuario->getEmail()),
-            'perfil'        => $obUsuario->isAdministrador() ? 'Administrador' : 'Viajante',
-            'dataCadastro'  => Formatador::data($obUsuario->getDataCadastro()),
-            'totalRoteiros' => count(Roteiro::listarPorUsuario($obUsuario->getIdUsuario())),
-            'infoAdmin'     => $infoAdmin,
-            'tamanhoSenha'  => Usuario::TAMANHO_MINIMO_SENHA
-        ], '', 'Meu perfil');
+            'iniciais'           => self::e(Texto::iniciais($obUsuario->getNome())),
+            'nome'               => self::e($obUsuario->getNome()),
+            'email'              => self::e($obUsuario->getEmail()),
+            'telefone'           => self::e($obUsuario->getTelefone() === '' ? '' : Formatador::telefone($obUsuario->getTelefone())),
+            'cidade'             => self::e($obUsuario->getCidade()),
+            'dataNascimento'     => self::e($obUsuario->getDataNascimento() ?? ''),
+            'dataMaxima'         => date('Y-m-d', strtotime('-1 day')),
+            'estilos'            => $estilos,
+            'infos'              => $infos,
+            'marcadoDicas'       => $obUsuario->isReceberEmails() ? 'checked' : '',
+            'marcadoAlertas'     => $obUsuario->isReceberAlertasPreco() ? 'checked' : '',
+            'marcadoPromocoes'   => $obUsuario->isReceberPromocoes() ? 'checked' : '',
+            'tamanhoSenha'       => Usuario::TAMANHO_MINIMO_SENHA
+        ], '', 'Meu perfil', ['cabecalhoPagina' => $cabecalho]);
     }
 
     public static function postPerfil(): void
     {
         $obUsuario = self::exigirAutenticacao();
 
-        $nome  = trim($_POST['nome'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-
-        if(strlen($nome) < 3 or !Validador::email($email)){
-            Session::setFlash('erro', 'Informe um nome com pelo menos 3 caracteres e um e-mail válido.');
-            self::redirecionar('/perfil');
-        }
-
         try{
-            $obUsuario->atualizarDados($nome, $email, $obUsuario->isReceberEmails());
+            $obUsuario->atualizarPerfil($_POST);
             Session::setUsuario($obUsuario);
             Session::setFlash('sucesso', 'Seus dados foram atualizados.');
         }catch(RegraNegocioException $e){
             Session::setFlash('erro', $e->getMessage());
         }
 
+        self::redirecionar('/perfil');
+    }
+
+    public static function postComunicacoes(): void
+    {
+        $obUsuario = self::exigirAutenticacao();
+
+        $obUsuario->atualizarComunicacoes(!empty($_POST['dicas']), !empty($_POST['alertasPreco']), !empty($_POST['promocoes']));
+
+        if(($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch'){
+            http_response_code(204);
+            exit();
+        }
+
+        Session::setFlash('sucesso', 'Preferências de comunicação salvas.');
         self::redirecionar('/perfil');
     }
 

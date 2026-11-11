@@ -1,18 +1,6 @@
-<h2 class="text-lg font-semibold text-blue-950">Finalizar e compartilhar</h2>
-<p class="mt-1 text-sm text-slate-500">O sistema salva o pacote e gera um link em modo somente leitura — quem receber pode ver o cronograma, mas não pode alterar nada.</p>
-
-<form method="POST" action="/roteiros/finalizar" class="mt-4 space-y-3">
-    {{csrf}}
-    <input type="hidden" name="idRoteiro" value="{{id}}">
-
-    <div>
-        <label for="validade" class="rotulo">Validade do link</label>
-        <select id="validade" name="validade" class="campo">
-            {{opcoesValidade}}
-        </select>
-    </div>
-
-    <button type="submit" class="btn-destaque w-full">{{textoBotao}}</button>
-</form>
-
-{{aviso}}
+<section class="cartao flex flex-col gap-3">
+    <h3 class="text-[17px] font-bold">Concluir e compartilhar</h3>
+    <p class="dica">Quando terminar de montar, conclua o roteiro. Ele passa para "Pronto para viajar" e você recebe um link somente leitura para enviar a quem vai viajar com você.</p>
+    {{acao}}
+    <span class="text-center text-[12.5px] text-apagado">Alterações salvas automaticamente</span>
+</section>

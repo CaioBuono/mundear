@@ -7,15 +7,15 @@
         "dataFim": "2026-12-14",
         "origem": "Birigui - SP",
         "quantidadePessoas": 2,
-        "orcamento": 2000,
+        "orcamento": 1000,
         "etapaAtual": "Revisão",
         "idDestinos": [
             1
         ],
         "status": "Pronto para viajar",
-        "valorTotalEstimado": 1599.5,
+        "valorTotalEstimado": 1619.5,
         "dataCriacao": "2026-11-10 13:30:05",
-        "dataAtualizacao": "2026-11-10 13:30:05",
+        "dataAtualizacao": "2026-11-10 19:47:55",
         "itens": [
             {
                 "idItem": 1,
@@ -29,7 +29,7 @@
                 "quantidadePessoas": 2,
                 "quantidadeDiarias": 1,
                 "valorUnitario": 244.9,
-                "subtotal": 0,
+                "subtotal": 489.8,
                 "transporte": {
                     "idTransporte": "o2",
                     "tipoTransporte": "onibus",
@@ -55,7 +55,7 @@
                 "quantidadePessoas": 2,
                 "quantidadeDiarias": 3,
                 "valorUnitario": 319.9,
-                "subtotal": 0,
+                "subtotal": 959.7,
                 "transporte": null
             },
             {
@@ -70,11 +70,19 @@
                 "quantidadePessoas": 2,
                 "quantidadeDiarias": 1,
                 "valorUnitario": 150,
-                "subtotal": 0,
+                "subtotal": 150,
                 "transporte": null
             }
         ],
-        "gastosExtras": [],
+        "gastosExtras": [
+            {
+                "idGasto": 1,
+                "descricao": "Restaurante",
+                "categoria": "Refeição",
+                "data": "2026-12-11",
+                "valor": 20
+            }
+        ],
         "anotacoes": [
             {
                 "idAnotacao": 1,
@@ -98,12 +106,12 @@
             }
         ],
         "compartilhamento": {
-            "idCompartilhamento": 1,
-            "token": "4f1c2a9b8e7d6c5b4a3f2e1d0c9b8a71",
-            "urlLink": "/compartilhado?token=4f1c2a9b8e7d6c5b4a3f2e1d0c9b8a71",
-            "dataExpiracao": "2026-12-10 16:44:28",
+            "idCompartilhamento": 3,
+            "token": "5bfb890560641395ded21fe174069ff1",
+            "urlLink": "/compartilhado?token=5bfb890560641395ded21fe174069ff1",
+            "dataExpiracao": "2026-12-10 19:47:55",
             "statusAtivo": true,
-            "dataCriacao": "2026-11-10 16:44:28"
+            "dataCriacao": "2026-11-10 19:47:55"
         }
     },
     {
@@ -300,59 +308,72 @@
         "origem": "Birigui",
         "quantidadePessoas": 2,
         "orcamento": 1000,
-        "etapaAtual": "Turismo",
+        "etapaAtual": "Revisão",
         "idDestinos": [
             1
         ],
-        "status": "Em planejamento",
-        "valorTotalEstimado": 1093.8,
+        "status": "Pronto para viajar",
+        "valorTotalEstimado": 1948.9,
         "dataCriacao": "2026-11-10 14:18:00",
-        "dataAtualizacao": "2026-11-10 14:18:31",
+        "dataAtualizacao": "2026-11-10 21:14:24",
         "itens": [
             {
-                "idItem": 1,
+                "idItem": 3,
                 "tipoServico": "transporte",
-                "idServico": "a1",
-                "descricao": "Avião Azul",
-                "detalhes": "Araçatuba (ARU) → Rio (SDU) · saída 06:10, chegada 14/11 09:55",
+                "idServico": "VP4145c1ea",
+                "descricao": "Veículo pessoal · Carro (estimativa)",
+                "detalhes": "Birigui → Rio de Janeiro - RJ · 1.916 km · Gasolina · pedágios R$ 304,80",
                 "dataAgendada": "2026-11-14",
                 "dataFim": null,
-                "horario": "06:10",
+                "horario": "06:00",
                 "quantidadePessoas": 2,
                 "quantidadeDiarias": 1,
-                "valorUnitario": 319.9,
-                "subtotal": 639.8,
+                "valorUnitario": 1309.1,
+                "subtotal": 1309.1,
                 "transporte": {
-                    "idTransporte": "a1",
-                    "tipoTransporte": "voo",
-                    "empresa": "Azul",
-                    "localOrigem": "Araçatuba (ARU)",
-                    "localDestino": "Rio (SDU)",
-                    "dataHoraPartida": "2026-11-14 06:10:00",
-                    "dataHoraChegada": "2026-11-14 09:55:00",
-                    "duracaoMinutos": 225,
-                    "preco": 319.9,
-                    "assentosDisponiveis": 40
+                    "idTransporte": "VP4145c1ea",
+                    "tipoTransporte": "veiculo",
+                    "empresa": "Carro",
+                    "localOrigem": "Birigui",
+                    "localDestino": "Rio de Janeiro - RJ",
+                    "dataHoraPartida": "2026-11-14 06:00:00",
+                    "dataHoraChegada": "2026-11-14 06:00:00",
+                    "duracaoMinutos": 0,
+                    "preco": 1309.1,
+                    "assentosDisponiveis": 9223372036854775807,
+                    "tipoVeiculo": "Carro",
+                    "combustivel": "Gasolina",
+                    "distanciaKm": 1916,
+                    "consumoKmPorLitro": 12,
+                    "precoCombustivel": 6.29,
+                    "valorPedagios": 304.8
                 }
             },
             {
-                "idItem": 2,
+                "idItem": 4,
                 "tipoServico": "hospedagem",
-                "idServico": 11,
-                "descricao": "Pousada Ilha Bella",
-                "detalhes": "Suíte para casal · 1 cama · 1 banheiro · via Airbnb",
+                "idServico": 1,
+                "descricao": "Arosa Rio Hotel",
+                "detalhes": "Quarto duplo · via Booking.com",
                 "dataAgendada": "2026-11-14",
                 "dataFim": "2026-11-16",
                 "horario": null,
                 "quantidadePessoas": 2,
                 "quantidadeDiarias": 2,
-                "valorUnitario": 227,
-                "subtotal": 454,
+                "valorUnitario": 319.9,
+                "subtotal": 639.8,
                 "transporte": null
             }
         ],
         "gastosExtras": [],
         "anotacoes": [],
-        "compartilhamento": null
+        "compartilhamento": {
+            "idCompartilhamento": 4,
+            "token": "92507569ee55606639800c5b1bc009e8",
+            "urlLink": "/compartilhado?token=92507569ee55606639800c5b1bc009e8",
+            "dataExpiracao": "2026-12-10 21:14:24",
+            "statusAtivo": true,
+            "dataCriacao": "2026-11-10 21:14:24"
+        }
     }
 ]

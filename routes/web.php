@@ -26,7 +26,6 @@ $rotas = [
         '/turismo'            => [TurismoController::class, 'getBusca'],
 
         '/roteiros'           => [RoteiroController::class, 'getLista'],
-        '/roteiros/novo'      => [RoteiroController::class, 'getNovo'],
         '/roteiros/editar'    => [RoteiroController::class, 'getEditar'],
 
         '/compartilhado'      => [CompartilhamentoController::class, 'getVisualizar'],
@@ -44,6 +43,7 @@ $rotas = [
         '/redefinir-senha'           => [UsuarioController::class, 'postRedefinirSenha'],
         '/perfil'                    => [UsuarioController::class, 'postPerfil'],
         '/perfil/senha'              => [UsuarioController::class, 'postSenha'],
+        '/perfil/comunicacoes'       => [UsuarioController::class, 'postComunicacoes'],
 
         '/roteiros/novo'             => [RoteiroController::class, 'postNovo'],
         '/roteiros/editar'           => [RoteiroController::class, 'postEditar'],
@@ -55,6 +55,9 @@ $rotas = [
         '/roteiros/avancar-etapa'    => [RoteiroController::class, 'postAvancarEtapa'],
         '/roteiros/itens/remover'    => [RoteiroController::class, 'postRemoverItem'],
         '/roteiros/itens/quantidade' => [RoteiroController::class, 'postQuantidadeItem'],
+        '/roteiros/gastos/adicionar' => [RoteiroController::class, 'postAdicionarGasto'],
+        '/roteiros/gastos/remover'   => [RoteiroController::class, 'postRemoverGasto'],
+        '/roteiros/anotacao'         => [RoteiroController::class, 'postAnotacao'],
 
         '/admin/guias/novo'          => [AdminController::class, 'postNovoGuia'],
         '/admin/guias/editar'        => [AdminController::class, 'postEditarGuia'],

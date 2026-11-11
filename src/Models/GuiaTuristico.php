@@ -9,6 +9,8 @@ use Utils\Validador;
 
 class GuiaTuristico implements ServicoRoteiro
 {
+    const UNIDADES_VALOR = ['meio período', 'dia', 'noite', 'hora'];
+
     private ?int $idGuia = null;
 
     private string $nome = '';
@@ -28,6 +30,8 @@ class GuiaTuristico implements ServicoRoteiro
     private string $apresentacao = '';
 
     private float $valorDiaria = 0;
+
+    private string $unidadeValor = 'dia';
 
     private ?int $diaFolga = null;
 
@@ -52,6 +56,7 @@ class GuiaTuristico implements ServicoRoteiro
     public function getIdiomas(): string { return $this->idiomas; }
     public function getRegioes(): string { return $this->regioes; }
     public function getApresentacao(): string { return $this->apresentacao; }
+    public function getUnidadeValor(): string { return $this->unidadeValor; }
 
     public function setAtivo(bool $ativo): void
     {
@@ -104,6 +109,9 @@ class GuiaTuristico implements ServicoRoteiro
         $diaFolga = $dados['diaFolga'] ?? '';
         if($diaFolga !== '' and !Validador::inteiroEntre($diaFolga, 0, 6)) $erros[] = 'Dia de folga inválido.';
 
+        if(!in_array($dados['unidadeValor'] ?? '', self::UNIDADES_VALOR, true)) $erros[] = 'Escolha como o valor do guia é cobrado.';
+        if(strlen(trim($dados['apresentacao'] ?? '')) > 160) $erros[] = 'A apresentação pode ter no máximo 160 caracteres.';
+
         return $erros;
     }
 
@@ -116,6 +124,7 @@ class GuiaTuristico implements ServicoRoteiro
         $this->especialidade = trim($dados['especialidade']);
         $this->cidadeAtuacao = Destino::buscarPorCidade($dados['cidadeAtuacao'])->getCidade();
         $this->valorDiaria   = round((float) str_replace(',', '.', $dados['valorDiaria']), 2);
+        $this->unidadeValor  = $dados['unidadeValor'];
         $this->diaFolga      = $diaFolga === '' ? null : (int) $diaFolga;
         $this->ativo         = !empty($dados['ativo']);
         $this->email         = strtolower(trim($dados['email'] ?? ''));
@@ -175,6 +184,7 @@ class GuiaTuristico implements ServicoRoteiro
         $obGuia->especialidade = $registro['especialidade'];
         $obGuia->cidadeAtuacao = $registro['cidadeAtuacao'];
         $obGuia->valorDiaria   = (float) $registro['valorDiaria'];
+        $obGuia->unidadeValor  = $registro['unidadeValor'] ?? 'dia';
         $obGuia->diaFolga      = isset($registro['diaFolga']) ? (int) $registro['diaFolga'] : null;
         $obGuia->ativo         = (bool) ($registro['ativo'] ?? true);
         $obGuia->dataCadastro  = $registro['dataCadastro'] ?? null;
@@ -195,6 +205,7 @@ class GuiaTuristico implements ServicoRoteiro
             'especialidade' => $this->especialidade,
             'cidadeAtuacao' => $this->cidadeAtuacao,
             'valorDiaria'   => $this->valorDiaria,
+            'unidadeValor'  => $this->unidadeValor,
             'diaFolga'      => $this->diaFolga,
             'ativo'         => $this->ativo,
             'dataCadastro'  => $this->dataCadastro,

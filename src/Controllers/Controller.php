@@ -17,8 +17,8 @@ abstract class Controller
 
     protected static $pathComponentes = __DIR__ . '/../Views/components/';
 
-    private const CLASSE_NAV_BASE    = 'relative flex flex-none items-center gap-2.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-bold transition md:px-3.5 md:py-2.5 md:text-[15px] [&_svg]:h-[22px] [&_svg]:w-[22px] [&_svg]:flex-none';
-    private const CLASSE_NAV_ATIVO   = self::CLASSE_NAV_BASE . ' bg-navy-2 text-white [&_svg]:text-laranja-claro md:after:absolute md:after:inset-x-3.5 md:after:-bottom-[15px] md:after:h-[3px] md:after:rounded-t md:after:bg-laranja';
+    private const CLASSE_NAV_BASE    = 'relative flex flex-none items-center gap-2.5 whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-bold transition xl:px-3.5 xl:py-2.5 xl:text-[15px] [&_svg]:h-[22px] [&_svg]:w-[22px] [&_svg]:flex-none';
+    private const CLASSE_NAV_ATIVO   = self::CLASSE_NAV_BASE . ' bg-navy-2 text-white [&_svg]:text-laranja-claro xl:after:absolute xl:after:inset-x-3.5 xl:after:-bottom-[15px] xl:after:h-[3px] xl:after:rounded-t xl:after:bg-laranja';
     private const CLASSE_NAV_INATIVO = self::CLASSE_NAV_BASE . ' text-menu hover:bg-navy-2 hover:text-white';
 
     private const ICONES_MENU = [
@@ -93,7 +93,7 @@ abstract class Controller
         $perfilUsuario = ViewRenderer::getComponente([
             'icone'       => self::e(Texto::iniciais($dadosUsuario['nome'] ?? '')),
             'nomeUsuario' => self::e($dadosUsuario['nome'] ?? ''),
-            'linkAdmin'   => $isAdmin ? '<a href="/admin" class="block px-5 py-3 text-sm hover:bg-slate-50">Administração</a>' : ''
+            'classeNome'  => $isAdmin ? '2xl:block' : 'md:block'
         ], self::$pathComponentsUsuario, 'usuario-perfil.php');
 
         $variaveisEstrutura = [
@@ -143,15 +143,15 @@ abstract class Controller
     {
         $itens = implode('', array_map(fn($mensagem) => '<li>' . self::e($mensagem) . '</li>', $mensagens));
 
-        return self::montarAlerta($tipo, '<ul class="list-disc space-y-1 pl-5">' . $itens . '</ul>');
+        return self::montarAlerta($tipo, '<ul class="list-disc space-y-1 pl-5 font-medium">' . $itens . '</ul>');
     }
 
     private static function montarAlerta(string $tipo, string $conteudoHtml, string $acaoHtml = ''): string
     {
         $estilos = [
-            'sucesso' => ['border-emerald-200 bg-emerald-50 text-emerald-800', 'Tudo certo!'],
-            'erro'    => ['border-red-200 bg-red-50 text-red-700', 'Não foi possível concluir'],
-            'info'    => ['border-blue-200 bg-blue-50 text-blue-900', 'Atenção']
+            'sucesso' => ['border-[#b4e0c9] bg-ok-suave text-ok', 'Tudo certo!'],
+            'erro'    => ['border-[#f1b9a4] bg-alerta-suave text-alerta', 'Não foi possível concluir'],
+            'info'    => ['border-linha bg-suave text-navy', 'Atenção']
         ];
 
         [$classes, $titulo] = $estilos[$tipo] ?? $estilos['info'];
@@ -201,10 +201,10 @@ abstract class Controller
         return $html;
     }
 
-    protected static function getDatalistCidades(): string
+    protected static function getDatalistDestinos(): string
     {
         return implode('', array_map(
-            fn(Destino $obDestino) => '<option value="' . self::e($obDestino->getCidade()) . '"></option>',
+            fn(Destino $obDestino) => '<option value="' . self::e($obDestino->getCidade() . ' - ' . $obDestino->getEstado()) . '"></option>',
             Destino::listar()
         ));
     }
@@ -212,8 +212,8 @@ abstract class Controller
     protected static function getBadgeStatus(bool $ativo, string $textoAtivo = 'Ativo', string $textoInativo = 'Inativo'): string
     {
         return $ativo
-            ? '<span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">' . self::e($textoAtivo) . '</span>'
-            : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">' . self::e($textoInativo) . '</span>';
+            ? '<span class="inline-flex items-center whitespace-nowrap rounded-full bg-ok-suave px-[9px] py-[3px] text-[11.5px] font-bold text-ok">' . self::e($textoAtivo) . '</span>'
+            : '<span class="inline-flex items-center whitespace-nowrap rounded-full bg-[#eef0f4] px-[9px] py-[3px] text-[11.5px] font-bold text-apagado">' . self::e($textoInativo) . '</span>';
     }
 
     protected static function validarCamposObrigatorios($camposRecebidos, $camposObrigatorios): array

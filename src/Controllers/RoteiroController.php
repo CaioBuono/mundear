@@ -6,7 +6,9 @@ use Exceptions\RegraNegocioException;
 use Exceptions\DadosInvalidosException;
 use Exceptions\OperacaoNaoPermitidaException;
 use Exceptions\RegistroNaoEncontradoException;
+use Models\Anotacao;
 use Models\Destino;
+use Models\GastoExtra;
 use Models\GuiaTuristico;
 use Models\Hospedagem;
 use Models\ItemRoteiro;
@@ -25,52 +27,87 @@ class RoteiroController extends Controller
 {
     private static $pathComponentesRoteiro = __DIR__ . '/../Views/roteiro/components/';
 
-    private const ESTILO_TIPO = [
-        ItemRoteiro::TIPO_TRANSPORTE => ['bg-blue-50 text-blue-900', 'text-blue-800'],
-        ItemRoteiro::TIPO_HOSPEDAGEM => ['bg-orange-50 text-orange-600', 'text-orange-600'],
-        ItemRoteiro::TIPO_GUIA       => ['bg-emerald-50 text-emerald-700', 'text-emerald-700'],
-        ItemRoteiro::TIPO_PASSEIO    => ['bg-violet-50 text-violet-700', 'text-violet-700'],
+    private const TIPO_GASTO_EXTRA = 'extra';
+
+    private const COR_ICONE_TIPO = [
+        ItemRoteiro::TIPO_TRANSPORTE => 'cor-transporte',
+        ItemRoteiro::TIPO_HOSPEDAGEM => 'cor-hospedagem',
+        ItemRoteiro::TIPO_GUIA       => 'cor-guia',
+        ItemRoteiro::TIPO_PASSEIO    => 'cor-passeio',
+        self::TIPO_GASTO_EXTRA       => 'cor-extra'
     ];
 
     private const COR_MARCADOR_TIPO = [
-        ItemRoteiro::TIPO_TRANSPORTE => 'bg-blue-800',
-        ItemRoteiro::TIPO_HOSPEDAGEM => 'bg-orange-500',
-        ItemRoteiro::TIPO_GUIA       => 'bg-emerald-600',
-        ItemRoteiro::TIPO_PASSEIO    => 'bg-violet-600',
+        ItemRoteiro::TIPO_TRANSPORTE => 'bg-navy-3',
+        ItemRoteiro::TIPO_HOSPEDAGEM => 'bg-laranja',
+        ItemRoteiro::TIPO_GUIA       => 'bg-ok',
+        ItemRoteiro::TIPO_PASSEIO    => 'bg-[#7c4ddb]',
+        self::TIPO_GASTO_EXTRA       => 'bg-[#d6336c]'
     ];
 
-    private const VALIDADES_LINK =['7' => '7 dias', '30' => '30 dias', '90' => '90 dias', '0' => 'Sem expiração'];
+    private const FILTROS_STATUS = [
+        'todos'       => ['rotulo' => 'Todos', 'status' => null],
+        'planejamento' => ['rotulo' => 'Em planejamento', 'status' => Roteiro::STATUS_EM_PLANEJAMENTO],
+        'prontos'     => ['rotulo' => 'Prontos para viajar', 'status' => Roteiro::STATUS_PRONTO_PARA_VIAJAR],
+        'realizadas'  => ['rotulo' => 'Viagens realizadas', 'status' => Roteiro::STATUS_VIAGEM_REALIZADA]
+    ];
 
     public static function getLista(): string
     {
         $obUsuario = self::exigirAutenticacao();
         $roteiros  = Roteiro::listarPorUsuario($obUsuario->getIdUsuario());
+        $filtro    = self::parametroPermitido('status', self::FILTROS_STATUS, 'todos');
+        $status    = self::FILTROS_STATUS[$filtro]['status'];
+        $exibidos  = array_values(array_filter($roteiros, fn(Roteiro $obRoteiro) => $status === null or $obRoteiro->getStatus() === $status));
 
-        $conteudo = empty($roteiros)
-            ? self::getEstadoVazio('Nenhum roteiro por aqui ainda', 'Crie seu primeiro roteiro informando o nome da viagem, as datas e o destino.', '<a href="/roteiros/novo" class="btn-destaque mt-5">Criar roteiro</a>')
-            : '<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">' . self::getCardsRoteiros($roteiros) . '</div>';
+        $filtros = '';
+        foreach(self::FILTROS_STATUS as $chave => $dados){
+            $quantidade = count(array_filter($roteiros, fn(Roteiro $obRoteiro) => $dados['status'] === null or $obRoteiro->getStatus() === $dados['status']));
+            $filtros   .= sprintf(
+                '<a href="/roteiros%s" aria-pressed="%s" class="rounded-full border border-linha bg-white px-3.5 py-[7px] text-[13.5px] font-bold text-navy transition hover:border-navy aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white">%s · %d</a>',
+                $chave === 'todos' ? '' : '?status=' . $chave,
+                $chave === $filtro ? 'true' : 'false',
+                self::e($dados['rotulo']),
+                $quantidade
+            );
+        }
+
+        $conteudo = match(true){
+            empty($roteiros) => '<div class="cartao col-span-full px-10 py-10 text-center text-apagado">Você ainda não tem roteiros. Crie o primeiro com o botão "Adicionar novo roteiro".</div>',
+            empty($exibidos) => '<div class="cartao col-span-full px-10 py-10 text-center text-apagado">Nenhum roteiro nesta situação.</div>',
+            default          => self::getCardsRoteiros($exibidos)
+        };
+
+        $quantidadeTotal = count($roteiros);
+        $cabecalho = sprintf(
+            '<div class="border-b border-linha bg-white"><div class="container-app flex flex-wrap items-center justify-between gap-x-8 gap-y-5 pb-6 pt-[22px]"><div class="flex min-w-0 items-center gap-4"><span class="grid h-14 w-14 flex-none place-items-center rounded-[14px] bg-navy text-white shadow-[0_8px_18px_-10px_var(--color-navy)]">%s</span><div class="min-w-0"><h1 class="text-[28px] font-extrabold leading-tight tracking-[-.01em]">Meus roteiros</h1><p class="mt-0.5 text-[14.5px] text-apagado">%s · organize, edite e compartilhe seus planejamentos.</p></div></div><button type="button" class="btn-destaque btn-lg" data-abrir-janela="janela-novo-roteiro">%sAdicionar novo roteiro</button></div></div>',
+            Icones::get('lista', 'h-7 w-7'),
+            $quantidadeTotal . ($quantidadeTotal === 1 ? ' roteiro' : ' roteiros'),
+            Icones::get('mais', 'h-[18px] w-[18px]')
+        );
 
         return self::renderizarPagina('roteiro/lista.php', [
-            'conteudo' => $conteudo,
-            'resumo'   => count($roteiros) === 1 ? '1 roteiro' : count($roteiros) . ' roteiros'
-        ], 'roteiros', 'Meus roteiros');
+            'filtros'     => $filtros,
+            'conteudo'    => $conteudo,
+            'janelaNovo'  => self::getJanelaNovoRoteiro()
+        ], 'roteiros', 'Meus roteiros', ['cabecalhoPagina' => $cabecalho]);
     }
 
     public static function getCardsRoteiros(array $roteiros): string
     {
-        $variaveis = array_map(fn(Roteiro $obRoteiro) => [
-            'id'              => $obRoteiro->getIdRoteiro(),
-            'titulo'          => self::e($obRoteiro->getTitulo()),
-            'destinos'        => self::e($obRoteiro->getNomesDestinos()),
-            'periodo'         => Formatador::data($obRoteiro->getDataInicio()) . ' – ' . Formatador::data($obRoteiro->getDataFim()),
-            'dias'            => $obRoteiro->getQuantidadeDias() . ($obRoteiro->getQuantidadeDias() > 1 ? ' dias' : ' dia'),
-            'itens'           => count($obRoteiro->getItens()) . (count($obRoteiro->getItens()) === 1 ? ' serviço' : ' serviços'),
-            'total'           => self::moeda($obRoteiro->getValorTotalEstimado()),
-            'status'          => self::getBadgeRoteiro($obRoteiro),
-            'link'            => $obRoteiro->possuiLinkAtivo() ? '<p class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-emerald-700">' . Icones::get('link', 'h-3.5 w-3.5') . 'Link ativo</p>' : '',
-            'iconePin'        => Icones::get('pin', 'h-4 w-4 shrink-0 text-slate-400'),
-            'iconeCalendario' => Icones::get('calendario', 'h-4 w-4 shrink-0 text-slate-400')
-        ], $roteiros);
+        $variaveis = array_map(function(Roteiro $obRoteiro){
+            $quantidade = count($obRoteiro->getItens()) + count($obRoteiro->getGastosExtras());
+
+            return self::getResumoViagem($obRoteiro) + [
+                'id'           => $obRoteiro->getIdRoteiro(),
+                'titulo'       => self::e($obRoteiro->getTitulo()),
+                'destinos'     => self::e(self::getDestinosComEstado($obRoteiro)),
+                'itens'        => $quantidade . ($quantidade === 1 ? ' serviço' : ' serviços'),
+                'total'        => self::moeda($obRoteiro->getValorTotalEstimado()),
+                'status'       => self::getBadgeRoteiro($obRoteiro),
+                'link'         => $obRoteiro->possuiLinkAtivo() ? '<span class="inline-flex items-center gap-1 text-xs font-bold text-ok">' . Icones::get('link', 'h-3.5 w-3.5') . 'Link ativo</span>' : ''
+            ];
+        }, $roteiros);
 
         return ViewRenderer::getLista($variaveis, self::$pathComponentesRoteiro, 'card.php');
     }
@@ -83,32 +120,23 @@ class RoteiroController extends Controller
             default                            => 'bg-laranja-suave text-laranja-escuro',
         };
 
-        return '<span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ' . $cores . '">' . self::e($obRoteiro->getStatus()) . '</span>';
-    }
-
-    public static function getNovo(): string
-    {
-        self::exigirAutenticacao();
-
-        return self::renderizarFormularioNovo([], []);
+        return '<span class="inline-flex flex-none items-center whitespace-nowrap rounded-full px-[9px] py-[3px] text-[11.5px] font-bold ' . $cores . '">' . self::e($obRoteiro->getStatus()) . '</span>';
     }
 
     public static function postNovo(): string
     {
-        $obUsuario    = self::exigirAutenticacao();
-        $vemDoInicio  = ($_POST['origemFormulario'] ?? '') === 'inicio';
-        $dados        = $_POST;
-
-        if($vemDoInicio){
-            $obDestino         = Destino::buscarPorCidade(explode(' - ', (string) ($dados['destino'] ?? ''))[0]);
-            $dados['destinos'] = $obDestino instanceof Destino ? [$obDestino->getIdDestino()] : [];
-        }
+        $obUsuario   = self::exigirAutenticacao();
+        $vemDoInicio = ($_POST['origemFormulario'] ?? '') === 'inicio';
+        $dados       = self::converterDestinoDigitado($_POST);
 
         $erros = Roteiro::validarDados($dados);
+        if(!empty($erros) and $vemDoInicio){
+            return UsuarioController::renderizarHome($_POST, $erros);
+        }
+
         if(!empty($erros)){
-            return $vemDoInicio
-                ? UsuarioController::renderizarHome($_POST, $erros)
-                : self::renderizarFormularioNovo($_POST, $erros);
+            Session::setDadosFormulario('novoRoteiro', ['valores' => $_POST, 'erros' => $erros]);
+            self::redirecionar(self::urlInterna($_POST['voltar'] ?? null, '/roteiros'));
         }
 
         $obRoteiro = Roteiro::criar($obUsuario->getIdUsuario(), $dados);
@@ -117,61 +145,118 @@ class RoteiroController extends Controller
         self::redirecionar('/transporte?roteiro=' . $obRoteiro->getIdRoteiro());
     }
 
-    private static function renderizarFormularioNovo(array $valores, array $erros): string
+    public static function getJanelaNovoRoteiro(): string
     {
-        return self::renderizarPagina('roteiro/novo.php', [
-            'feedback'        => empty($erros) ? '' : self::getAlertaLista('erro', $erros),
-            'valorTitulo'     => self::e($valores['titulo'] ?? ''),
-            'valorDataInicio' => self::e($valores['dataInicio'] ?? ''),
-            'valorDataFim'    => self::e($valores['dataFim'] ?? ''),
-            'dataMinima'      => date('Y-m-d'),
-            'opcoesDestinos'  => self::getCheckboxesDestinos((array) ($valores['destinos'] ?? []))
-        ], 'roteiros', 'Novo roteiro');
+        $formulario = Session::getDadosFormulario('novoRoteiro');
+        $valores    = $formulario['valores'] ?? [];
+        $erros      = $formulario['erros'] ?? [];
+
+        return ViewRenderer::getComponente([
+            'voltar'           => self::e($_SERVER['REQUEST_URI'] ?? '/roteiros'),
+            'abrirAoCarregar'  => empty($erros) ? '' : 'data-abrir-ao-carregar',
+            'erros'            => empty($erros) ? '' : '<div class="erro-campos">' . Icones::get('alerta', 'h-[18px] w-[18px] flex-none') . '<span>' . self::e(implode(' ', $erros)) . '</span></div>',
+            'valorTitulo'      => self::e($valores['titulo'] ?? ''),
+            'valorOrigem'      => self::e($valores['origem'] ?? ''),
+            'valorDestino'     => self::e($valores['destino'] ?? ''),
+            'valorDataInicio'  => self::e($valores['dataInicio'] ?? ''),
+            'valorDataFim'     => self::e($valores['dataFim'] ?? ''),
+            'valorPessoas'     => self::e($valores['quantidadePessoas'] ?? '2'),
+            'valorOrcamento'   => self::e($valores['orcamento'] ?? ''),
+            'dataMinima'       => date('Y-m-d'),
+            'datalistDestinos' => self::getDatalistDestinos(),
+            'iconeFechar'      => Icones::get('fechar', 'h-5 w-5'),
+            'iconeSeta'        => Icones::get('seta', 'h-[18px] w-[18px]')
+        ], self::$pathComponentesRoteiro, 'janela-novo-roteiro.php');
     }
 
-    private static function getCheckboxesDestinos(array $idsSelecionados): string
+    private static function converterDestinoDigitado(array $dados): array
     {
-        $idsSelecionados = array_map('intval', $idsSelecionados);
+        $obDestino         = Destino::buscarPorCidade(explode(' - ', (string) ($dados['destino'] ?? ''))[0]);
+        $dados['destinos'] = $obDestino instanceof Destino ? [$obDestino->getIdDestino()] : [];
 
-        $variaveis = array_map(fn(Destino $obDestino) => [
-            'id'      => $obDestino->getIdDestino(),
-            'cidade'  => self::e($obDestino->getCidade()),
-            'estado'  => self::e($obDestino->getEstado() . ' · ' . $obDestino->getPais()),
-            'marcado' => in_array($obDestino->getIdDestino(), $idsSelecionados, true) ? 'checked' : ''
-        ], Destino::listar());
+        return $dados;
+    }
 
-        return ViewRenderer::getLista($variaveis, self::$pathComponentesRoteiro, 'checkbox-destino.php');
+    private static function getDestinosComEstado(Roteiro $obRoteiro): string
+    {
+        return implode(', ', array_map(fn(Destino $obDestino) => $obDestino->getCidade() . ' - ' . $obDestino->getEstado(), $obRoteiro->getDestinos()));
+    }
+
+    public static function getResumoViagem(Roteiro $obRoteiro): array
+    {
+        $destinos = self::getDestinosComEstado($obRoteiro);
+        $pessoas  = $obRoteiro->getQuantidadePessoas();
+        $dias     = $obRoteiro->getQuantidadeDias();
+
+        return [
+            'trajeto'         => self::e($obRoteiro->getOrigem() !== '' ? $obRoteiro->getOrigem() . ' → ' . $destinos : $destinos),
+            'periodo'         => Formatador::data($obRoteiro->getDataInicio()) . ' – ' . Formatador::data($obRoteiro->getDataFim()),
+            'dias'            => $dias . ($dias > 1 ? ' dias' : ' dia'),
+            'pessoas'         => $pessoas . ($pessoas === 1 ? ' pessoa' : ' pessoas'),
+            'iconePin'        => Icones::get('pin', 'h-4 w-4'),
+            'iconeCalendario' => Icones::get('calendario', 'h-4 w-4'),
+            'iconePessoas'    => Icones::get('pessoas', 'h-4 w-4')
+        ];
     }
 
     public static function getEditar(): string
     {
-        $obUsuario = self::exigirAutenticacao();
-        $obRoteiro = self::getRoteiroDoUsuario($obUsuario->getIdUsuario(), $_GET['id'] ?? 0);
-        $id        = $obRoteiro->getIdRoteiro();
+        $obUsuario  = self::exigirAutenticacao();
+        $obRoteiro  = self::getRoteiroDoUsuario($obUsuario->getIdUsuario(), $_GET['id'] ?? 0);
+        $id         = $obRoteiro->getIdRoteiro();
+        $destinos   = self::getDestinosComEstado($obRoteiro);
+        $pessoas    = $obRoteiro->getQuantidadePessoas();
+        $quantidade = count($obRoteiro->getItens()) + count($obRoteiro->getGastosExtras());
 
-        return self::renderizarPagina('roteiro/editar.php', [
+        return self::renderizarPagina('roteiro/editar.php', self::getResumoViagem($obRoteiro) + [
             'id'                     => $id,
             'titulo'                 => self::e($obRoteiro->getTitulo()),
             'status'                 => self::getBadgeRoteiro($obRoteiro),
-            'destinos'               => self::e($obRoteiro->getNomesDestinos()),
-            'periodo'                => Formatador::data($obRoteiro->getDataInicio()) . ' a ' . Formatador::data($obRoteiro->getDataFim()),
-            'dias'                   => $obRoteiro->getQuantidadeDias() . ($obRoteiro->getQuantidadeDias() > 1 ? ' dias' : ' dia'),
-            'quantidadeItens'        => count($obRoteiro->getItens()) . (count($obRoteiro->getItens()) === 1 ? ' serviço' : ' serviços'),
-            'total'                  => self::moeda($obRoteiro->getValorTotalEstimado()),
-            'totaisPorTipo'          => self::getTotaisPorTipoHtml($obRoteiro),
+            'quantidadeItens'        => $quantidade . ($quantidade === 1 ? ' serviço no roteiro' : ' serviços no roteiro'),
+            'urlTransporte'          => '/transporte?roteiro=' . $id,
+            'urlHospedagem'          => '/hospedagem?roteiro=' . $id,
+            'urlGuias'               => '/turismo?roteiro=' . $id . '&modo=guias',
+            'urlPasseios'            => '/turismo?roteiro=' . $id . '&modo=passeios',
             'cronograma'             => self::getCronogramaHtml($obRoteiro, true),
-            'painelCompartilhamento' => self::getPainelCompartilhamento($obRoteiro),
             'valorTitulo'            => self::e($obRoteiro->getTitulo()),
+            'valorOrigem'            => self::e($obRoteiro->getOrigem()),
+            'valorDestino'           => self::e(explode(', ', $destinos)[0]),
+            'datalistDestinos'       => self::getDatalistDestinos(),
             'valorDataInicio'        => $obRoteiro->getDataInicio(),
             'valorDataFim'           => $obRoteiro->getDataFim(),
-            'opcoesDestinos'         => self::getCheckboxesDestinos($obRoteiro->getIdDestinos()),
-            'iconePin'               => Icones::get('pin', 'h-4 w-4 text-slate-400'),
-            'iconeCalendario'        => Icones::get('calendario', 'h-4 w-4 text-slate-400'),
-            'iconeAviao'             => Icones::get('aviao', 'h-6 w-6'),
-            'iconeCama'              => Icones::get('cama', 'h-6 w-6'),
-            'iconeGuia'              => Icones::get('guia', 'h-6 w-6'),
-            'iconeIngresso'          => Icones::get('ingresso', 'h-6 w-6')
+            'valorPessoas'           => $pessoas,
+            'valorOrcamento'         => $obRoteiro->getOrcamento() === null ? '' : number_format($obRoteiro->getOrcamento(), 2, '.', ''),
+            'total'                  => self::moeda($obRoteiro->calcularValorTotal()),
+            'porPessoa'              => self::moeda($obRoteiro->calcularValorPorPessoa()),
+            'totaisPorTipo'          => self::getTotaisPorTipoHtml($obRoteiro),
+            'orcamento'              => self::getOrcamentoHtml($obRoteiro),
+            'painelCompartilhamento' => self::getPainelCompartilhamento($obRoteiro),
+            'janelaNovo'             => self::getJanelaNovoRoteiro(),
+            'iconeMais'              => Icones::get('mais', 'h-[18px] w-[18px]'),
+            'janelaGasto'            => ViewRenderer::getComponente([
+                'id'               => $id,
+                'opcoesDias'       => self::getOpcoesDias($obRoteiro),
+                'opcoesCategorias' => self::opcoesSelect(array_combine(GastoExtra::CATEGORIAS, GastoExtra::CATEGORIAS), 'Refeição'),
+                'iconeFechar'      => Icones::get('fechar', 'h-5 w-5'),
+                'iconeMais'        => Icones::get('mais', 'h-[18px] w-[18px]')
+            ], self::$pathComponentesRoteiro, 'janela-gasto.php'),
+            'iconeAviao'             => Icones::get('aviao', 'h-[22px] w-[22px]'),
+            'iconeCama'              => Icones::get('cama', 'h-[22px] w-[22px]'),
+            'iconeGuia'              => Icones::get('pessoas', 'h-[22px] w-[22px]'),
+            'iconeIngresso'          => Icones::get('ingresso', 'h-[22px] w-[22px]'),
+            'iconeCarteira'          => Icones::get('carteira', 'h-[22px] w-[22px]'),
+            'iconeBaixo'             => Icones::get('baixo', 'h-5 w-5 text-apagado transition group-open:rotate-180')
         ], 'roteiros', $obRoteiro->getTitulo());
+    }
+
+    private static function getOpcoesDias(Roteiro $obRoteiro): string
+    {
+        $opcoes = [];
+        foreach($obRoteiro->getDatasDaViagem() as $indice => $data){
+            $opcoes[$data] = 'Dia ' . ($indice + 1) . ' · ' . Formatador::dataCurta($data);
+        }
+
+        return self::opcoesSelect($opcoes, $obRoteiro->getDataInicio());
     }
 
     public static function postEditar(): void
@@ -179,7 +264,7 @@ class RoteiroController extends Controller
         $obRoteiro = self::getRoteiroDoPost();
 
         try{
-            $obRoteiro->atualizarDados($_POST);
+            $obRoteiro->atualizarDados(self::converterDestinoDigitado($_POST));
             $obRoteiro->salvar();
             Session::setFlash('sucesso', 'Dados da viagem atualizados.');
         }catch(RegraNegocioException $e){
@@ -187,6 +272,70 @@ class RoteiroController extends Controller
         }
 
         self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
+    }
+
+    public static function postAdicionarGasto(): void
+    {
+        $obRoteiro = self::getRoteiroDoPost();
+        $descricao = trim((string) ($_POST['descricao'] ?? ''));
+
+        try{
+            $obRoteiro->adicionarGastoExtra(
+                $descricao,
+                (string) ($_POST['categoria'] ?? ''),
+                (float) str_replace(',', '.', (string) ($_POST['valor'] ?? '0')),
+                (string) ($_POST['data'] ?? '')
+            );
+            $obRoteiro->salvar();
+            Session::setFlash('sucesso', sprintf('"%s" foi adicionado ao roteiro. Novo total estimado: %s.', $descricao, self::moeda($obRoteiro->getValorTotalEstimado())));
+        }catch(RegraNegocioException $e){
+            Session::setFlash('erro', $e->getMessage());
+        }
+
+        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
+    }
+
+    public static function postRemoverGasto(): void
+    {
+        $obRoteiro = self::getRoteiroDoPost();
+
+        if($obRoteiro->removerGastoExtra((int) ($_POST['idGasto'] ?? 0))){
+            $obRoteiro->salvar();
+            Session::setFlash('sucesso', 'Gasto removido. Novo total estimado: ' . self::moeda($obRoteiro->getValorTotalEstimado()) . '.');
+        }else{
+            Session::setFlash('erro', 'Este gasto não foi encontrado no roteiro.');
+        }
+
+        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
+    }
+
+    public static function postAnotacao(): void
+    {
+        $obRoteiro    = self::getRoteiroDoPost();
+        $data         = (string) ($_POST['data'] ?? '');
+        $semRecarregar = ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch';
+
+        try{
+            $obRoteiro->adicionarAnotacao($data, (string) ($_POST['texto'] ?? ''));
+            $obRoteiro->salvar();
+
+            if($semRecarregar){
+                http_response_code(204);
+                exit();
+            }
+
+            Session::setFlash('sucesso', 'Anotação salva.');
+        }catch(RegraNegocioException $e){
+            if($semRecarregar){
+                http_response_code(422);
+                echo $e->getMessage();
+                exit();
+            }
+
+            Session::setFlash('erro', $e->getMessage());
+        }
+
+        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '#dia-' . $data);
     }
 
     public static function postExcluir(): void
@@ -205,12 +354,13 @@ class RoteiroController extends Controller
         try{
             $obRoteiro->concluir();
             $obRoteiro->salvar();
-            Session::setFlash('sucesso', 'Roteiro finalizado! O link somente leitura já pode ser compartilhado.');
+            Session::setFlash('sucesso', 'Roteiro concluído. Agora ele está pronto para viajar.');
         }catch(RegraNegocioException $e){
             Session::setFlash('erro', $e->getMessage());
+            self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
         }
 
-        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '#compartilhar');
+        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '&compartilhar=1');
     }
 
     public static function postRevogarLink(): void
@@ -220,12 +370,12 @@ class RoteiroController extends Controller
         try{
             $obRoteiro->revogarCompartilhamento();
             $obRoteiro->salvar();
-            Session::setFlash('sucesso', 'Link revogado. Quem tiver o endereço antigo não conseguirá mais ver o roteiro.');
+            Session::setFlash('sucesso', 'Link desativado. Quem tinha o link não acessa mais o roteiro.');
         }catch(RegraNegocioException $e){
             Session::setFlash('erro', $e->getMessage());
         }
 
-        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro() . '#compartilhar');
+        self::redirecionar('/roteiros/editar?id=' . $obRoteiro->getIdRoteiro());
     }
 
     public static function postAdicionarItem(): void
@@ -483,17 +633,21 @@ class RoteiroController extends Controller
                 $itensHtml .= self::getItemHtml($obRoteiro, $obItem, $editavel);
             }
 
-            foreach($hospedagens as $obHospedagem){
-                if($data > $obHospedagem->getDataAgendada() and $data < $obHospedagem->getDataFim()){
-                    $itensHtml .= '<p class="flex items-center gap-2 px-5 py-3 text-sm text-slate-500">' . Icones::get('cama', 'h-4 w-4 text-orange-500') . 'Hospedado(a) em ' . self::e($obHospedagem->getDescricao()) . '</p>';
+            foreach($obRoteiro->getGastosExtras() as $obGasto){
+                if($obGasto->getData() === $data){
+                    $itensHtml .= self::getGastoHtml($obRoteiro, $obGasto, $editavel);
                 }
-                if($data === $obHospedagem->getDataFim()){
-                    $itensHtml .= '<p class="flex items-center gap-2 px-5 py-3 text-sm text-slate-500">' . Icones::get('cama', 'h-4 w-4 text-orange-500') . 'Check-out: ' . self::e($obHospedagem->getDescricao()) . '</p>';
+            }
+
+            foreach($hospedagens as $obHospedagem){
+                if($data > $obHospedagem->getDataAgendada() and $data <= $obHospedagem->getDataFim()){
+                    $texto = $data === $obHospedagem->getDataFim() ? 'Check-out: ' : 'Hospedado(a) em ';
+                    $itensHtml .= '<p class="flex items-center gap-2 px-[18px] py-2.5 text-[13px] text-apagado">' . Icones::get('cama', 'h-4 w-4 text-laranja') . $texto . self::e($obHospedagem->getDescricao()) . '</p>';
                 }
             }
 
             if($itensHtml === ''){
-                $itensHtml = '<p class="px-5 py-4 text-sm text-slate-400">Dia livre — nenhum serviço agendado.</p>';
+                $itensHtml = '<p class="px-[18px] py-3.5 text-[13.5px] text-apagado">Dia livre, nenhum serviço agendado.</p>';
             }
 
             $dias[] = [
@@ -502,8 +656,16 @@ class RoteiroController extends Controller
                 'dataFormatada' => Formatador::data($data),
                 'diaSemana'     => Formatador::diaSemana($data),
                 'itens'         => $itensHtml,
-                'acaoDia'       => $editavel
-                    ? '<a href="/turismo?roteiro=' . $obRoteiro->getIdRoteiro() . '&data=' . $data . '" class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-50">' . Icones::get('mais', 'h-3.5 w-3.5') . '<span class="hidden sm:inline">Guia ou passeio</span></a>'
+                'anotacao'      => self::getAnotacaoHtml($obRoteiro, $data, $indice + 1, $editavel),
+                'acoesDia'      => $editavel
+                    ? sprintf(
+                        '<div class="ml-auto flex flex-wrap items-center gap-x-3.5 gap-y-1"><a href="/turismo?roteiro=%d&data=%s" class="inline-flex items-center gap-1 text-[13.5px] font-bold text-laranja-escuro hover:underline">%sGuia ou passeio</a><button type="button" data-abrir-janela="janela-gasto" data-dia="%s" class="inline-flex cursor-pointer items-center gap-1 text-[13.5px] font-bold text-laranja-escuro hover:underline">%sOutro gasto</button></div>',
+                        $obRoteiro->getIdRoteiro(),
+                        $data,
+                        Icones::get('mais', 'h-4 w-4'),
+                        $data,
+                        Icones::get('carteira', 'h-4 w-4')
+                    )
                     : ''
             ];
         }
@@ -511,64 +673,108 @@ class RoteiroController extends Controller
         return ViewRenderer::getLista($dias, self::$pathComponentesRoteiro, 'dia.php');
     }
 
+    private static function getAnotacaoHtml(Roteiro $obRoteiro, string $data, int $numeroDia, bool $editavel): string
+    {
+        $texto = $obRoteiro->getAnotacaoDoDia($data)?->getTexto() ?? '';
+
+        if($editavel){
+            return ViewRenderer::getComponente([
+                'idRoteiro' => $obRoteiro->getIdRoteiro(),
+                'data'      => $data,
+                'numeroDia' => $numeroDia,
+                'texto'     => self::e($texto),
+                'maximo'    => Anotacao::TAMANHO_MAXIMO_TEXTO
+            ], self::$pathComponentesRoteiro, 'anotacao.php');
+        }
+
+        return $texto === '' ? '' : '<div class="px-[18px] pb-3.5 pt-1"><p class="rounded-r-md border-l-3 border-laranja bg-[#fbfcfe] px-3 py-2 text-[13.5px]">' . self::e($texto) . '</p></div>';
+    }
+
     private static function getItemHtml(Roteiro $obRoteiro, ItemRoteiro $obItem, bool $editavel): string
     {
-        [$corIcone, $corTipo] = self::ESTILO_TIPO[$obItem->getTipoServico()];
-
         $icone = match($obItem->getTipoServico()){
-            ItemRoteiro::TIPO_TRANSPORTE => str_starts_with($obItem->getDescricao(), 'Ônibus') ? 'onibus' : 'aviao',
+            ItemRoteiro::TIPO_TRANSPORTE => match(true){
+                $obItem->getTransporte() instanceof VeiculoPessoal,
+                str_starts_with($obItem->getDescricao(), 'Carona') => 'carro',
+                str_starts_with($obItem->getDescricao(), 'Ônibus') => 'onibus',
+                default                                            => 'aviao'
+            },
             ItemRoteiro::TIPO_HOSPEDAGEM => 'cama',
-            ItemRoteiro::TIPO_GUIA       => 'guia',
+            ItemRoteiro::TIPO_GUIA       => 'pessoas',
             default                      => 'ingresso'
         };
 
-        $complemento = match($obItem->getTipoServico()){
-            ItemRoteiro::TIPO_TRANSPORTE => ' · ' . $obItem->getHorario(),
-            ItemRoteiro::TIPO_HOSPEDAGEM => ' · check-in ' . Formatador::dataCurta($obItem->getDataAgendada()) . ' → check-out ' . Formatador::dataCurta($obItem->getDataFim()),
-            default                      => ''
-        };
+        $detalhes = $obItem->getDetalhes();
+        if($obItem->getTipoServico() === ItemRoteiro::TIPO_HOSPEDAGEM){
+            $noites   = Validador::diasEntre($obItem->getDataAgendada(), (string) $obItem->getDataFim());
+            $detalhes = 'Check-in · ' . $noites . ($noites === 1 ? ' noite · ' : ' noites · ') . $detalhes;
+        }
 
-        $variaveisComuns = ['idRoteiro' => $obRoteiro->getIdRoteiro(), 'idItem' => $obItem->getIdItem()];
-
-        $controleQuantidade = ($editavel and $obItem->isCobradoPorPessoa())
-            ? ViewRenderer::getComponente($variaveisComuns + [
+        $controleQuantidade = ($editavel and $obItem->isCobradoPorPessoa() and !$obItem->getTransporte() instanceof VeiculoPessoal)
+            ? ViewRenderer::getComponente([
+                'idRoteiro'     => $obRoteiro->getIdRoteiro(),
+                'idItem'        => $obItem->getIdItem(),
                 'quantidade'    => $obItem->getQuantidadePessoas(),
                 'maximo'        => ItemRoteiro::QUANTIDADE_MAXIMA_PESSOAS,
                 'valorUnitario' => number_format($obItem->getValorUnitario(), 2, '.', '')
             ], self::$pathComponentesRoteiro, 'controle-quantidade.php')
             : '';
 
-        $botaoRemover = $editavel
-            ? ViewRenderer::getComponente($variaveisComuns + ['iconeLixeira' => Icones::get('lixeira')], self::$pathComponentesRoteiro, 'botao-remover.php')
-            : '';
-
         return ViewRenderer::getComponente([
-            'idItem'             => $obItem->getIdItem(),
-            'icone'              => Icones::get($icone),
-            'corIcone'           => $corIcone,
-            'corTipo'            => $corTipo,
-            'tipo'               => self::e($obItem->getRotuloTipo() . $complemento),
+            'ancora'             => 'item-' . $obItem->getIdItem(),
+            'idSubtotal'         => $obItem->getIdItem(),
+            'icone'              => Icones::get($icone, 'h-[19px] w-[19px]'),
+            'corIcone'           => self::COR_ICONE_TIPO[$obItem->getTipoServico()],
             'descricao'          => self::e($obItem->getDescricao()),
-            'detalhes'           => self::e($obItem->getDetalhes()),
+            'detalhes'           => self::e($detalhes),
             'quantidade'         => self::e($obItem->getDescricaoQuantidade()),
             'subtotal'           => self::moeda($obItem->getSubtotal()),
             'controleQuantidade' => $controleQuantidade,
-            'botaoRemover'       => $botaoRemover
+            'botaoRemover'       => $editavel ? self::getBotaoRemover($obRoteiro, '/roteiros/itens/remover', 'idItem', $obItem->getIdItem(), $obItem->getDescricao()) : ''
         ], self::$pathComponentesRoteiro, 'item.php');
+    }
+
+    private static function getGastoHtml(Roteiro $obRoteiro, GastoExtra $obGasto, bool $editavel): string
+    {
+        return ViewRenderer::getComponente([
+            'ancora'             => 'gasto-' . $obGasto->getIdGasto(),
+            'idSubtotal'         => 'gasto-' . $obGasto->getIdGasto(),
+            'icone'              => Icones::get('carteira', 'h-[19px] w-[19px]'),
+            'corIcone'           => self::COR_ICONE_TIPO[self::TIPO_GASTO_EXTRA],
+            'descricao'          => self::e($obGasto->getDescricao()),
+            'detalhes'           => 'Gasto por fora · ' . self::e($obGasto->getCategoria()),
+            'quantidade'         => '',
+            'subtotal'           => self::moeda($obGasto->getValor()),
+            'controleQuantidade' => '',
+            'botaoRemover'       => $editavel ? self::getBotaoRemover($obRoteiro, '/roteiros/gastos/remover', 'idGasto', $obGasto->getIdGasto(), $obGasto->getDescricao()) : ''
+        ], self::$pathComponentesRoteiro, 'item.php');
+    }
+
+    private static function getBotaoRemover(Roteiro $obRoteiro, string $acao, string $nomeCampo, int $id, string $descricao): string
+    {
+        return ViewRenderer::getComponente([
+            'acao'         => $acao,
+            'idRoteiro'    => $obRoteiro->getIdRoteiro(),
+            'nomeCampo'    => $nomeCampo,
+            'id'           => $id,
+            'descricao'    => self::e($descricao),
+            'iconeLixeira' => Icones::get('lixeira', 'h-[18px] w-[18px]')
+        ], self::$pathComponentesRoteiro, 'botao-remover.php');
     }
 
     public static function getTotaisPorTipoHtml(Roteiro $obRoteiro): string
     {
-        $rotulos = ItemRoteiro::getRotulosTipo();
+        $rotulos = ItemRoteiro::getRotulosTipo() + [self::TIPO_GASTO_EXTRA => 'Outros gastos'];
+        $totais  = $obRoteiro->getTotaisPorTipo() + [
+            self::TIPO_GASTO_EXTRA => array_sum(array_map(fn(GastoExtra $obGasto) => $obGasto->getValor(), $obRoteiro->getGastosExtras()))
+        ];
         $html    = '';
 
-        foreach($obRoteiro->getTotaisPorTipo() as $tipo => $valor){
-            $classeValor = $valor > 0 ? 'font-semibold text-blue-950' : 'text-slate-400';
+        foreach($totais as $tipo => $valor){
             $html .= sprintf(
-                '<div class="flex items-center justify-between py-2"><dt class="flex items-center gap-2 text-slate-600"><span class="h-2.5 w-2.5 rounded-full %s"></span>%s</dt><dd class="%s">%s</dd></div>',
+                '<div class="flex items-center gap-2.5 border-t border-linha py-[9px] text-sm"><span class="h-2.5 w-2.5 flex-none rounded-full %s"></span>%s<span class="ml-auto font-bold">%s</span></div>',
                 self::COR_MARCADOR_TIPO[$tipo],
                 self::e($rotulos[$tipo]),
-                $classeValor,
                 self::moeda($valor)
             );
         }
@@ -576,39 +782,63 @@ class RoteiroController extends Controller
         return $html;
     }
 
+    private static function getOrcamentoHtml(Roteiro $obRoteiro): string
+    {
+        $saldo = $obRoteiro->calcularSaldoOrcamento();
+
+        if($saldo === null){
+            return '<div class="border-t border-linha pt-3"><span class="dica">Sem orçamento definido. Informe quanto quer gastar em "Editar dados da viagem".</span></div>';
+        }
+
+        $orcamento  = $obRoteiro->getOrcamento();
+        $percentual = $orcamento > 0 ? min(100, $obRoteiro->calcularValorTotal() / $orcamento * 100) : 100;
+        $estourou   = $obRoteiro->isOrcamentoUltrapassado();
+
+        return sprintf(
+            '<div class="flex flex-col gap-1.5 border-t border-linha pt-3 text-sm"><div class="flex items-center justify-between gap-3"><span class="dica font-semibold">Quanto quer gastar</span><b>%s</b></div><div class="h-2 overflow-hidden rounded-full bg-suave"><i class="block h-full rounded-full %s" style="width:%s%%"></i></div><span class="text-[13px] font-bold %s">%s</span></div>',
+            self::moeda($orcamento),
+            $estourou ? 'bg-alerta' : 'bg-ok',
+            number_format($percentual, 1, '.', ''),
+            $estourou ? 'text-alerta' : 'text-ok',
+            $estourou ? self::moeda(-$saldo) . ' acima do orçamento' : 'Ainda cabem ' . self::moeda($saldo) . ' no orçamento'
+        );
+    }
+
     private static function getPainelCompartilhamento(Roteiro $obRoteiro): string
     {
-        $variaveis = ['id' => $obRoteiro->getIdRoteiro()];
+        $variaveis = ['id' => $obRoteiro->getIdRoteiro(), 'iconeLink' => Icones::get('link', 'h-[18px] w-[18px]')];
 
         if(empty($obRoteiro->getItens())){
-            return ViewRenderer::getComponente($variaveis, self::$pathComponentesRoteiro, 'painel-sem-itens.php');
-        }
-
-        if($obRoteiro->possuiLinkAtivo()){
+            $acao = ViewRenderer::getComponente($variaveis, self::$pathComponentesRoteiro, 'painel-sem-itens.php');
+        }elseif($obRoteiro->possuiLinkAtivo()){
             $obCompartilhamento = $obRoteiro->getCompartilhamento();
+            $expiracao          = $obCompartilhamento->getDataExpiracao();
+            $diasRestantes      = $expiracao ? max(0, Validador::diasEntre(date('Y-m-d'), substr($expiracao, 0, 10))) : null;
 
-            return ViewRenderer::getComponente($variaveis + [
-                'urlCompleta'  => self::e(self::urlAbsoluta($obCompartilhamento->gerarLinkAcesso())),
-                'urlRelativa'  => self::e($obCompartilhamento->gerarLinkAcesso()),
-                'expiracao'    => $obCompartilhamento->getDataExpiracao()
-                    ? 'Válido até ' . Formatador::data($obCompartilhamento->getDataExpiracao())
-                    : 'Sem data de expiração',
-                'iconeCopiar'  => Icones::get('copiar', 'h-4 w-4'),
-                'iconeOlho'    => Icones::get('olho', 'h-4 w-4')
-            ], self::$pathComponentesRoteiro, 'painel-link.php');
+            $acao = '<button type="button" class="btn-destaque" data-abrir-janela="janela-link">' . $variaveis['iconeLink'] . 'Compartilhar link</button>'
+                  . ViewRenderer::getComponente($variaveis + [
+                      'urlCompleta'     => self::e(self::urlAbsoluta($obCompartilhamento->gerarLinkAcesso())),
+                      'urlRelativa'     => self::e($obCompartilhamento->gerarLinkAcesso()),
+                      'expiracao'       => $diasRestantes === null ? 'Sem data de expiração' : 'Expira em ' . $diasRestantes . ($diasRestantes === 1 ? ' dia' : ' dias'),
+                      'abrirAoCarregar' => isset($_GET['compartilhar']) ? 'data-abrir-ao-carregar' : '',
+                      'iconeFechar'     => Icones::get('fechar', 'h-5 w-5'),
+                      'iconeOlho'       => Icones::get('olho', 'h-[18px] w-[18px]')
+                  ], self::$pathComponentesRoteiro, 'painel-link.php');
+        }else{
+            $obCompartilhamento = $obRoteiro->getCompartilhamento();
+            $aviso = $obCompartilhamento
+                ? '<p class="rounded-lg bg-fundo px-3 py-2 text-[12.5px] text-apagado">O link anterior ' . ($obCompartilhamento->isExpirado() ? 'expirou' : 'foi desativado') . ' e não funciona mais. Gere um novo link se quiser compartilhar de novo.</p>'
+                : '';
+
+            $acao = $aviso . sprintf(
+                '<form method="POST" action="/roteiros/finalizar" class="flex flex-col">{{csrf}}<input type="hidden" name="idRoteiro" value="%d"><button type="submit" class="btn-destaque">%s%s</button></form>',
+                $obRoteiro->getIdRoteiro(),
+                $variaveis['iconeLink'],
+                $obRoteiro->isFinalizado() ? 'Gerar novo link' : 'Concluir e gerar link'
+            );
         }
 
-        $obCompartilhamento = $obRoteiro->getCompartilhamento();
-        $aviso = '';
-        if($obCompartilhamento){
-            $aviso = '<p class="mt-3 rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-600">O link anterior ' . ($obCompartilhamento->isExpirado() ? 'expirou' : 'foi revogado') . ' e não funciona mais. Gere um novo link se quiser compartilhar de novo.</p>';
-        }
-
-        return ViewRenderer::getComponente($variaveis + [
-            'textoBotao'     => $obRoteiro->isFinalizado() ? 'Gerar novo link' : 'Finalizar e gerar link',
-            'opcoesValidade' => self::opcoesSelect(self::VALIDADES_LINK, '30'),
-            'aviso'          => $aviso
-        ], self::$pathComponentesRoteiro, 'painel-finalizar.php');
+        return ViewRenderer::getComponente(['acao' => $acao], self::$pathComponentesRoteiro, 'painel-finalizar.php');
     }
 
     private static function urlAbsoluta(string $caminho): string

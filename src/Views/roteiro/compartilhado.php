@@ -1,41 +1,46 @@
-<header class="border-b border-slate-200 bg-white">
-    <div class="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
-        <a href="/login"><img src="/public/images/logo/logo-mundear.png" alt="Mundear" class="w-36"></a>
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-900 ring-1 ring-blue-200">
-            {{iconeOlho}} Somente leitura
-        </span>
+<header class="bg-navy">
+    <div class="container-app flex h-20 items-center gap-4">
+        <a href="/?site"><img src="/public/img/logo-mundear-claro.png" alt="Mundear" class="h-[58px] w-auto"></a>
+        {{voltar}}
     </div>
 </header>
 
-<main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-500">Roteiro compartilhado por {{autor}}</p>
-    <h1 class="mt-1 text-2xl font-bold text-blue-950 sm:text-3xl">{{titulo}}</h1>
-    <p class="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-slate-600">
-        <span class="inline-flex items-center gap-1.5">{{iconePin}} {{destinos}}</span>
-        <span class="inline-flex items-center gap-1.5">{{iconeCalendario}} {{periodo}} · {{dias}}</span>
-    </p>
+<main class="container-app flex flex-col gap-6 pb-14 pt-7">
+    <div class="flex items-center gap-2.5 rounded-lg bg-suave px-3.5 py-2.5 text-[13.5px] font-semibold text-navy">
+        {{iconeOlho}}
+        <span><b>{{autor}}</b> compartilhou este roteiro com você. Você pode ver tudo, mas não pode editar.</span>
+    </div>
 
-    <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <section class="min-w-0 space-y-4">
+    <div class="flex flex-col gap-2">
+        <h1 class="text-[30px] font-extrabold leading-tight tracking-[-.01em]">{{titulo}}</h1>
+        <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-apagado">
+            <span class="inline-flex items-center gap-1.5">{{iconePin}}{{trajeto}}</span>
+            <span class="inline-flex items-center gap-1.5">{{iconeCalendario}}{{periodo}} · {{dias}}</span>
+            <span class="inline-flex items-center gap-1.5">{{iconePessoas}}{{pessoas}}</span>
+        </div>
+    </div>
+
+    <div class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section class="flex min-w-0 flex-col gap-3.5">
+            <h2 class="text-lg font-bold">Cronograma</h2>
             {{cronograma}}
         </section>
 
-        <aside class="space-y-4 lg:sticky lg:top-6 lg:self-start">
-            <div class="cartao">
-                <p class="text-sm text-slate-500">Valor total estimado</p>
-                <p class="mt-1 text-3xl font-bold text-blue-950">{{total}}</p>
-                <dl class="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
-                    {{totaisPorTipo}}
-                </dl>
+        <aside class="flex flex-col gap-3.5 lg:sticky lg:top-6">
+            <div class="cartao flex flex-col gap-2.5">
+                <span class="dica font-semibold">Custo total da viagem</span>
+                <b class="font-display text-[32px] font-extrabold leading-tight text-navy">{{total}}</b>
+                <span class="dica">{{porPessoa}} por pessoa</span>
+                <div class="flex flex-col">{{totaisPorTipo}}</div>
             </div>
 
-            <div class="rounded-2xl bg-blue-950 p-5 text-white">
-                <p class="font-semibold">Planeje a sua também</p>
-                <p class="mt-1 text-sm text-white/80">Monte roteiros com transporte, hospedagem e guias em um só lugar.</p>
-                <a href="/login" class="btn-destaque mt-4 w-full">Conhecer o Mundear</a>
+            <div class="flex flex-col gap-3 rounded-xl bg-navy p-[22px] text-[#dbe3f1]">
+                <h3 class="text-lg font-bold text-white">Também vai viajar?</h3>
+                <span class="text-sm">Monte o seu roteiro no Mundear e compare preços de transporte, hospedagem e passeios em um só lugar.</span>
+                <a href="/?site#criar-conta" class="btn-destaque">Criar minha conta grátis</a>
             </div>
 
-            <p class="text-xs text-slate-500">{{validade}} · atualizado em {{atualizacao}}. Os valores são estimativas e podem variar.</p>
+            <span class="dica text-center">{{validade}}</span>
         </aside>
     </div>
 </main>

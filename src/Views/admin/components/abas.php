@@ -1,8 +1,5 @@
-<div class="mb-6">
-    <p class="text-sm font-semibold uppercase tracking-wide text-orange-500">Administração</p>
-    <nav class="mt-3 flex gap-6 border-b border-slate-200 text-sm" aria-label="Seções da administração">
-        <a href="/admin" class="-mb-px whitespace-nowrap border-b-2 pb-3 {{abaRelatorio}}">Relatório</a>
-        <a href="/admin/guias" class="-mb-px whitespace-nowrap border-b-2 pb-3 {{abaGuias}}">Guias turísticos</a>
-        <a href="/admin/usuarios" class="-mb-px whitespace-nowrap border-b-2 pb-3 {{abaUsuarios}}">Usuários</a>
-    </nav>
-</div>
+<nav class="mb-[22px] flex flex-wrap gap-2" aria-label="Seções da administração">
+    <a href="/admin" aria-pressed="{{abaRelatorio}}" class="rounded-full border border-linha bg-white px-3.5 py-[7px] text-[13.5px] font-bold text-navy transition hover:border-navy aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white">Relatório</a>
+    <a href="/admin/guias" aria-pressed="{{abaGuias}}" class="rounded-full border border-linha bg-white px-3.5 py-[7px] text-[13.5px] font-bold text-navy transition hover:border-navy aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white">Guias turísticos</a>
+    <a href="/admin/usuarios" aria-pressed="{{abaUsuarios}}" class="rounded-full border border-linha bg-white px-3.5 py-[7px] text-[13.5px] font-bold text-navy transition hover:border-navy aria-pressed:border-navy aria-pressed:bg-navy aria-pressed:text-white">Usuários</a>
+</nav>
